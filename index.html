@@ -142,7 +142,7 @@
         <div class="card">
             <h2>📅 Agenda y Propuestas de Partidos</h2>
             
-            <!-- Listado superior de agenda -->
+            <!-- Listado superior de partidos propuestos/confirmados -->
             <div id="proposals-list-section" style="margin-bottom: 1.5rem;">
                 <p style="font-size: 0.85rem; color: #666;">Partidos propuestos y confirmados:</p>
                 <div id="proposals-container" class="loading">Cargando agenda...</div>
@@ -190,7 +190,7 @@
     </div>
 
     <script>
-        // ⚠️ ASEGÚRATE DE TENER TU URL DE APPS SCRIPT AQUÍ
+        // ⚠️ PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT QUE TERMINA EN /exec
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXUQgZv7zUf9-llXOzfri--KF5B8d_bmu5dqitMxUGIiWvtpiLdectjojZh5MfL7ugLg/exec';
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -289,26 +289,23 @@
         // Formateador estricto para evitar desfases de día por zona horaria
         function formatLocalDate(dateString) {
             if (!dateString) return 'Pendiente';
+            
+            // Si viene con formato ISO estándar de Google Sheets
             if (typeof dateString === 'string' && dateString.includes('T')) {
                 try {
                     const parts = dateString.split('T');
                     const dateParts = parts[0].split('-'); // [Año, Mes, Día]
-                    const timePart = parts[1].substring(0, 5); // HH:mm
+                    let timePart = parts[1].substring(0, 5); // HH:mm
+                    
                     if(dateParts.length === 3) {
+                        // Forzamos la hora limpia si viene en 00:00 o UTC desfasada para mostrar el día exacto
                         return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]} ${timePart}`;
                     }
                 } catch(e) {
                     console.error("Error parseando fecha", e);
                 }
             }
-            const d = new Date(dateString);
-            if (isNaN(d.getTime())) return dateString;
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            const hours = String(d.getHours()).padStart(2, '0');
-            const minutes = String(d.getMinutes()).padStart(2, '0');
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
+            return dateString;
         }
 
         function renderProposals(proposals) {
