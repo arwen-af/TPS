@@ -201,14 +201,21 @@
   </nav>
 
   <main>
-    <!-- TAB 1: INTEGRANTES -->
+    <!-- TAB 1: INTEGRANTES / PAREJAS -->
     <section id="integrantes" class="tab-content active">
+      <!-- 1. Lista de Parejas existentes (ARRIBA) -->
       <div class="card">
-        <h2>Añadir Nuevo Integrante</h2>
+        <h2>Parejas del Grupo (<span id="player-count">0</span>)</h2>
+        <ul id="player-list" class="player-list"></ul>
+      </div>
+
+      <!-- 2. Formulario para Registrar Nueva Pareja (ABAJO) -->
+      <div class="card">
+        <h2>Registrar Nueva Pareja</h2>
         <form id="form-player" onsubmit="addPlayer(event)">
           <div class="form-group">
-            <label for="p-name">Nombre y Apellidos</label>
-            <input type="text" id="p-name" placeholder="Ej. Carlos Martínez" required>
+            <label for="p-name">Nombre de las Integrantes</label>
+            <input type="text" id="p-name" placeholder="Ej. Jugadora 1 / Jugadora 2" required>
           </div>
           <div class="form-group">
             <label for="p-level">Nivel / Categoría</label>
@@ -218,13 +225,8 @@
               <option value="Avanzado">Avanzado</option>
             </select>
           </div>
-          <button type="submit" id="btn-add-p" class="btn">＋ Registrar Integrante</button>
+          <button type="submit" class="btn">＋ Registrar Pareja</button>
         </form>
-      </div>
-
-      <div class="card">
-        <h2>Miembros del Grupo (<span id="player-count">0</span>)</h2>
-        <ul id="player-list" class="player-list"></ul>
       </div>
     </section>
 
