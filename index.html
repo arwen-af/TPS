@@ -14,7 +14,6 @@
       --text-muted: #5f6368;
       --border-color: #dadce0;
       --success: #34a853;
-      --warning: #fbbc04;
       --radius: 12px;
     }
 
@@ -45,16 +44,8 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    header h1 {
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-
-    header p {
-      font-size: 0.85rem;
-      opacity: 0.9;
-      margin-top: 4px;
-    }
+    header h1 { font-size: 1.3rem; font-weight: 600; }
+    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
 
     nav {
       display: flex;
@@ -83,18 +74,9 @@
       border-bottom-color: var(--primary);
     }
 
-    main {
-      padding: 16px;
-      flex: 1;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
+    main { padding: 16px; flex: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     .card {
       background: var(--card-bg);
@@ -109,21 +91,15 @@
       font-size: 1.1rem;
       margin-bottom: 12px;
       color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
-    .form-group {
-      margin-bottom: 12px;
-    }
+    .form-group { margin-bottom: 12px; }
 
     label {
       display: block;
       font-size: 0.85rem;
       font-weight: 600;
       margin-bottom: 6px;
-      color: var(--text-color);
     }
 
     input, select {
@@ -132,12 +108,6 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       font-size: 0.9rem;
-      background-color: #fff;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--primary);
     }
 
     .btn {
@@ -150,49 +120,23 @@
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.2s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
 
-    .btn:hover {
-      background-color: var(--primary-hover);
-    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-success { background-color: var(--success); }
 
-    .btn-secondary {
-      background-color: #fff;
-      color: var(--primary);
-      border: 1px solid var(--primary);
-    }
-
-    .btn-secondary:hover {
-      background-color: #e8f0fe;
-    }
-
-    .btn-success {
-      background-color: var(--success);
-    }
-
-    .btn-success:hover {
-      background-color: #2d9247;
-    }
-
-    .player-list {
-      list-style: none;
-    }
-
+    .player-list { list-style: none; }
     .player-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 12px;
       border-bottom: 1px solid var(--border-color);
-    }
-
-    .player-item:last-child {
-      border-bottom: none;
     }
 
     .badge {
@@ -212,36 +156,23 @@
       margin-bottom: 10px;
     }
 
-    .option-header {
-      font-weight: 600;
-      font-size: 0.85rem;
-      margin-bottom: 8px;
-      color: var(--primary);
-    }
-
     .match-card {
       border-left: 4px solid var(--primary);
       padding-left: 12px;
       margin-bottom: 12px;
     }
 
-    .match-status {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
+    .status-pending { background: #fef7e0; color: #b06000; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; }
+    .status-confirmed { background: #e6f4ea; color: #137333; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; }
 
-    .status-pending { background: #fef7e0; color: #b06000; }
-    .status-confirmed { background: #e6f4ea; color: #137333; }
-
-    .score-inputs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
+    #loading-bar {
+      display: none;
+      background: #e8f0fe;
+      color: var(--primary);
+      text-align: center;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
     }
 
     footer {
@@ -258,8 +189,10 @@
 
   <header>
     <h1>🎾 Ranking Pádel TPS</h1>
-    <p>Prueba de Concepto (POC)</p>
+    <p>Conectado a Google Sheets en tiempo real</p>
   </header>
+
+  <div id="loading-bar">🔄 Sincronizando con Google Sheets...</div>
 
   <nav>
     <button class="tab-btn active" onclick="switchTab('integrantes')">👥 Integrantes</button>
@@ -285,15 +218,13 @@
               <option value="Avanzado">Avanzado</option>
             </select>
           </div>
-          <button type="submit" class="btn">＋ Registrar Integrante</button>
+          <button type="submit" id="btn-add-p" class="btn">＋ Registrar Integrante</button>
         </form>
       </div>
 
       <div class="card">
         <h2>Miembros del Grupo (<span id="player-count">0</span>)</h2>
-        <ul id="player-list" class="player-list">
-          <!-- Dinámico -->
-        </ul>
+        <ul id="player-list" class="player-list"></ul>
       </div>
     </section>
 
@@ -304,11 +235,11 @@
         <form id="form-proposal" onsubmit="createProposal(event)">
           <div class="form-group">
             <label>Pareja Propuesta 1</label>
-            <input type="text" id="p1-names" placeholder="Ej. Ana / Carlos" required>
+            <input type="text" id="p1-names" placeholder="Ej. Elena / Ana" required>
           </div>
           <div class="form-group">
             <label>Pareja Propuesta 2 (Rival)</label>
-            <input type="text" id="p2-names" placeholder="Ej. Laura / David" required>
+            <input type="text" id="p2-names" placeholder="Ej. Kiko / Laura" required>
           </div>
           <div class="form-group">
             <label>Club / Ubicación</label>
@@ -332,15 +263,13 @@
             <input type="datetime-local" id="opt-c" required>
           </div>
 
-          <button type="submit" class="btn">Enviar Propuesta de 3 Fechas</button>
+          <button type="submit" id="btn-add-prop" class="btn">Enviar Propuesta de 3 Fechas</button>
         </form>
       </div>
 
       <div class="card">
         <h2>Propuestas Activas y Partidos</h2>
-        <div id="proposals-list">
-          <!-- Dinámico -->
-        </div>
+        <div id="proposals-list"></div>
       </div>
     </section>
 
@@ -351,13 +280,11 @@
         <form id="form-result" onsubmit="saveResult(event)">
           <div class="form-group">
             <label for="res-match-select">Seleccionar Partido Confirmado</label>
-            <select id="res-match-select" required>
-              <!-- Dinámico -->
-            </select>
+            <select id="res-match-select" required></select>
           </div>
 
           <label>Marcador por Sets</label>
-          <div class="score-inputs">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
               <label style="font-size:0.75rem;">Set 1 (P1 - P2)</label>
               <input type="text" id="s1" placeholder="Ej. 6-4" required>
@@ -372,76 +299,102 @@
             <input type="text" id="s3" placeholder="Ej. 10-8">
           </div>
 
-          <button type="submit" class="btn btn-success">💾 Guardar Resultado</button>
+          <button type="submit" id="btn-add-res" class="btn btn-success">💾 Guardar Resultado</button>
         </form>
       </div>
 
       <div class="card">
         <h2>Historial de Partidos Jugados</h2>
-        <div id="results-history">
-          <!-- Dinámico -->
-        </div>
+        <div id="results-history"></div>
       </div>
     </section>
   </main>
 
   <footer>
-    Ranking Pádel TPS App • SDD Methodology
+    Ranking Pádel TPS App • SDD + Google Sheets Sync
   </footer>
 
   <script>
-    // ESTADO INICIAL
-    let players = [
-      { name: "Elena M.", level: "Intermedio" },
-      { name: "Ana R.", level: "Avanzado" },
-      { name: "Kiko S.", level: "Intermedio" },
-      { name: "Laura G.", level: "Iniciación" }
-    ];
+    // ⚠️ REEMPLAZA ESTA URL CON TU URL DE GOOGLE APPS SCRIPT
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmm_ybrn87_lHee8dBsMRUSgBOKTV4NkF_4yo7qqPmBVQlW6b4A-T0jdpbI428BIVmXw/exec';
 
+    let players = [];
     let proposals = [];
     let results = [];
 
-    // NAVEGACIÓN POR PESTAÑAS
+    function showLoading(show) {
+      document.getElementById('loading-bar').style.display = show ? 'block' : 'none';
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
       document.getElementById(tabId).classList.add('active');
       event.target.classList.add('active');
     }
 
-    // GESTIÓN DE INTEGRANTES
+    // CARGAR DATOS EN TIEMPO REAL DESDE GOOGLE SHEETS
+    async function loadDataFromSheets() {
+      if (SCRIPT_URL.includes('TU_URL')) return;
+      showLoading(true);
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=getData`);
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+          players = data.players || [];
+          proposals = data.proposals || [];
+          results = data.results || [];
+
+          renderPlayers();
+          renderProposals();
+          renderResults();
+          updateMatchSelect();
+        }
+      } catch (err) {
+        console.error("Error al cargar datos:", err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // RENDERIZADO
     function renderPlayers() {
       const list = document.getElementById('player-list');
       const count = document.getElementById('player-count');
       list.innerHTML = '';
       count.textContent = players.length;
 
-      players.forEach((p) => {
+      players.forEach(p => {
         const li = document.createElement('li');
         li.className = 'player-item';
-        li.innerHTML = `
-          <span><strong>${p.name}</strong></span>
-          <span class="badge">${p.level}</span>
-        `;
+        li.innerHTML = `<span><strong>${p.nombre}</strong></span><span class="badge">${p.nivel}</span>`;
         list.appendChild(li);
       });
     }
 
-    function addPlayer(e) {
+    async function addPlayer(e) {
       e.preventDefault();
       const name = document.getElementById('p-name').value.trim();
       const level = document.getElementById('p-level').value;
 
-      if (name) {
-        players.push({ name, level });
-        renderPlayers();
+      if (!name) return;
+      showLoading(true);
+
+      const newPlayer = { action: 'addPlayer', id: Date.now(), nombre: name, nivel: level, puntos: 0 };
+
+      try {
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(newPlayer) });
         document.getElementById('form-player').reset();
+        await loadDataFromSheets();
+      } catch (err) {
+        alert("Error al guardar jugador.");
+      } finally {
+        showLoading(false);
       }
     }
 
-    // GESTIÓN DE PROPUESTAS Y GOOGLE CALENDAR (90 MINUTOS)
-    function createProposal(e) {
+    async function createProposal(e) {
       e.preventDefault();
       const p1 = document.getElementById('p1-names').value.trim();
       const p2 = document.getElementById('p2-names').value.trim();
@@ -450,36 +403,42 @@
       const optB = document.getElementById('opt-b').value;
       const optC = document.getElementById('opt-c').value;
 
-      const newProp = {
-        id: Date.now(),
-        p1, p2, club,
-        options: [optA, optB, optC],
-        confirmed: null
-      };
+      showLoading(true);
+      const payload = { action: 'addProposal', id: Date.now(), p1, p2, club, optA, optB, optC, confirmada: '' };
 
-      proposals.push(newProp);
-      renderProposals();
-      updateMatchSelect();
-      document.getElementById('form-proposal').reset();
+      try {
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        document.getElementById('form-proposal').reset();
+        await loadDataFromSheets();
+      } catch (err) {
+        alert("Error al guardar propuesta.");
+      } finally {
+        showLoading(false);
+      }
     }
 
-    function confirmOption(proposalId, optIndex) {
-      const prop = proposals.find(p => p.id === proposalId);
-      if (prop) {
-        prop.confirmed = prop.options[optIndex];
-        renderProposals();
-        updateMatchSelect();
+    async function confirmOption(proposalId, optValue) {
+      showLoading(true);
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'confirmProposal', id: proposalId, confirmada: optValue })
+        });
+        await loadDataFromSheets();
+      } catch (err) {
+        alert("Error al confirmar opción.");
+      } finally {
+        showLoading(false);
       }
     }
 
     function generateGCalLink(p1, p2, club, startIso) {
       const startDate = new Date(startIso);
-      const endDate = new Date(startDate.getTime() + 90 * 60 * 1000); // +90 min
-
+      const endDate = new Date(startDate.getTime() + 90 * 60 * 1000);
       const formatGDate = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
 
       const title = encodeURIComponent(`Partido de Pádel: ${p1} vs ${p2}`);
-      const details = encodeURIComponent(`Partido de Pádel del Ranking TPS.\nDuración: 90 minutos.\nPareja 1: ${p1}\nPareja 2: ${p2}`);
+      const details = encodeURIComponent(`Partido de Pádel - Ranking TPS.\nDuración: 90 min.`);
       const location = encodeURIComponent(club);
       const dates = `${formatGDate(startDate)}/${formatGDate(endDate)}`;
 
@@ -499,34 +458,35 @@
         const div = document.createElement('div');
         div.className = 'match-card';
 
-        if (p.confirmed) {
-          const gcalUrl = generateGCalLink(p.p1, p.p2, p.club, p.confirmed);
-          const dateStr = new Date(p.confirmed).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+        if (p.confirmada) {
+          const gcalUrl = generateGCalLink(p.p1, p.p2, p.club, p.confirmada);
+          const dateStr = new Date(p.confirmada).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
           
           div.innerHTML = `
-            <span class="match-status status-confirmed">✓ Confirmado</span>
-            <p><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">📍 ${p.club}</p>
-            <p style="font-size:0.85rem; font-weight:600; color:var(--primary); margin-top:4px;">📅 ${dateStr} (90 min)</p>
-            <a href="${gcalUrl}" target="_blank" class="btn btn-secondary" style="margin-top:10px; text-decoration:none;">
+            <span class="status-confirmed">✓ Confirmado</span>
+            <p style="margin-top:6px;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
+            <p style="font-size:0.85rem; color:var(--text-muted);">📍 ${p.club}</p>
+            <p style="font-size:0.85rem; font-weight:600; color:var(--primary);">📅 ${dateStr} (90 min)</p>
+            <a href="${gcalUrl}" target="_blank" class="btn btn-secondary" style="margin-top:8px; text-decoration:none;">
               📅 Añadir a Google Calendar
             </a>
           `;
         } else {
-          let optsHtml = p.options.map((opt, idx) => {
+          const opts = [p.optA, p.optB, p.optC];
+          let optsHtml = opts.map((opt, idx) => {
+            if (!opt) return '';
             const dateStr = new Date(opt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
             return `
-              <button class="btn btn-secondary" style="margin-bottom:6px; font-size:0.8rem; padding:8px;" onclick="confirmOption(${p.id}, ${idx})">
-                Seleccionar Opción ${String.fromCharCode(65 + idx)}: ${dateStr}
+              <button class="btn btn-secondary" style="margin-bottom:6px; font-size:0.8rem; padding:8px;" onclick="confirmOption(${p.id}, '${opt}')">
+                Opción ${String.fromCharCode(65 + idx)}: ${dateStr}
               </button>
             `;
           }).join('');
 
           div.innerHTML = `
-            <span class="match-status status-pending">⏳ Pendiente de Elección</span>
-            <p><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
+            <span class="status-pending">⏳ Pendiente de Elección</span>
+            <p style="margin-top:6px;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
             <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">📍 ${p.club}</p>
-            <p style="font-size:0.8rem; font-weight:600; margin-bottom:6px;">Elige la opción acordada:</p>
             ${optsHtml}
           `;
         }
@@ -538,17 +498,16 @@
       const select = document.getElementById('res-match-select');
       select.innerHTML = '<option value="">-- Selecciona un partido --</option>';
       
-      const confirmedMatches = proposals.filter(p => p.confirmed);
+      const confirmedMatches = proposals.filter(p => p.confirmada);
       confirmedMatches.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
-        opt.textContent = `${p.p1} vs ${p.p2} (${new Date(p.confirmed).toLocaleDateString()})`;
+        opt.textContent = `${p.p1} vs ${p.p2}`;
         select.appendChild(opt);
       });
     }
 
-    // REGISTRO DE RESULTADOS
-    function saveResult(e) {
+    async function saveResult(e) {
       e.preventDefault();
       const matchId = document.getElementById('res-match-select').value;
       const s1 = document.getElementById('s1').value.trim();
@@ -558,17 +517,27 @@
       const match = proposals.find(p => p.id == matchId);
       if (!match) return;
 
-      const scoreText = s3 ? `${s1} / ${s2} / ${s3}` : `${s1} / ${s2}`;
-
-      results.push({
+      showLoading(true);
+      const payload = {
+        action: 'addResult',
+        id: Date.now(),
         p1: match.p1,
         p2: match.p2,
-        score: scoreText,
-        date: new Date(match.confirmed).toLocaleDateString()
-      });
+        set1: s1,
+        set2: s2,
+        set3: s3,
+        fecha: match.confirmada ? match.confirmada.split('T')[0] : new Date().toISOString().split('T')[0]
+      };
 
-      renderResults();
-      document.getElementById('form-result').reset();
+      try {
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        document.getElementById('form-result').reset();
+        await loadDataFromSheets();
+      } catch (err) {
+        alert("Error al guardar resultado.");
+      } finally {
+        showLoading(false);
+      }
     }
 
     function renderResults() {
@@ -583,19 +552,18 @@
       results.forEach(r => {
         const div = document.createElement('div');
         div.className = 'match-card';
+        const scoreStr = r.set3 ? `${r.set1} / ${r.set2} / ${r.set3}` : `${r.set1} / ${r.set2}`;
         div.innerHTML = `
           <p><strong>${r.p1}</strong> vs <strong>${r.p2}</strong></p>
-          <p style="font-size:0.9rem; font-weight:bold; color:var(--primary); margin:4px 0;">Marcador: ${r.score}</p>
-          <p style="font-size:0.75rem; color:var(--text-muted);">Jugado el: ${r.date}</p>
+          <p style="font-size:0.9rem; font-weight:bold; color:var(--primary); margin:4px 0;">Marcador: ${scoreStr}</p>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Fecha: ${r.fecha}</p>
         `;
         container.appendChild(div);
       });
     }
 
-    // INICIALIZACIÓN
-    renderPlayers();
-    renderProposals();
-    renderResults();
+    // CARGAR AL INICIAR
+    loadDataFromSheets();
   </script>
 </body>
 </html>
