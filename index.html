@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ranking Pádel TPS</title>
+  <title>Ranking de Pádel - TPS</title>
   <style>
     :root {
       --primary: #1a73e8;
@@ -23,6 +23,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-style: normal; /* Cero cursivas en toda la app */
     }
 
     body {
@@ -162,16 +163,6 @@
       background-color: var(--primary-hover);
     }
 
-    .btn-secondary {
-      background-color: #fff;
-      color: var(--primary);
-      border: 1px solid var(--primary);
-    }
-
-    .btn-secondary:hover {
-      background-color: #e8f0fe;
-    }
-
     .player-list {
       list-style: none;
     }
@@ -207,12 +198,13 @@
 
     .match-card {
       border-left: 4px solid var(--primary);
-      padding-left: 12px;
+      padding: 12px;
       margin-bottom: 12px;
       background: #fafafa;
-      padding: 12px;
       border-radius: 0 8px 8px 0;
-      border: 1px solid var(--border-color);
+      border-top: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
       border-left: 4px solid var(--primary);
     }
 
@@ -238,10 +230,11 @@
     }
 
     .loading {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--text-muted);
-    }
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-style: normal; /* Asegura texto recto */
+}
   </style>
 </head>
 <body>
@@ -327,10 +320,8 @@
   </footer>
 
   <script>
-    // ⚠️ URL DE TU GOOGLE APPS SCRIPT
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1-GZ46e2Q9yNqLhT5cQ_uJ3_l9p1b6xQWk3S7vF5h/exec';
 
-    // NAVEGACIÓN POR PESTAÑAS
     function switchTab(tabId, btnElement) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -434,7 +425,6 @@
       select2.innerHTML = options;
     }
 
-    // FORMATEADOR LITERAL BLINDADO PARA EVITAR DESFASES DE FECHA
     function formatLocalDate(dateString) {
       if (!dateString || dateString.trim() === '') return '';
       if (dateString.length > 16 && dateString.includes(':')) {
