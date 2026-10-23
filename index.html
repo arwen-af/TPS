@@ -124,11 +124,12 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      text-decoration: none;
     }
 
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
     .btn-success { background-color: var(--success); }
+    .btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; display: inline-block; }
 
     .player-list { list-style: none; }
     .player-item {
@@ -189,33 +190,31 @@
 
   <header>
     <h1>🎾 Ranking Pádel TPS</h1>
-    <p>Conectado a Google Sheets en tiempo real</p>
+    <p>Gestión y Agenda de Partidos</p>
   </header>
 
   <div id="loading-bar">🔄 Sincronizando con Google Sheets...</div>
 
   <nav>
-    <button class="tab-btn active" onclick="switchTab('integrantes')">👥 Integrantes</button>
-    <button class="tab-btn" onclick="switchTab('coordinar')">📅 Coordinar</button>
+    <button class="tab-btn active" onclick="switchTab('integrantes')">👥 Parejas</button>
+    <button class="tab-btn" onclick="switchTab('coordinar')">📅 Agenda</button>
     <button class="tab-btn" onclick="switchTab('resultados')">📝 Resultados</button>
   </nav>
 
   <main>
     <!-- TAB 1: INTEGRANTES / PAREJAS -->
     <section id="integrantes" class="tab-content active">
-      <!-- 1. Lista de Parejas existentes (ARRIBA) -->
       <div class="card">
         <h2>Parejas del Grupo (<span id="player-count">0</span>)</h2>
         <ul id="player-list" class="player-list"></ul>
       </div>
 
-      <!-- 2. Formulario para Registrar Nueva Pareja (ABAJO) -->
       <div class="card">
         <h2>Registrar Nueva Pareja</h2>
         <form id="form-player" onsubmit="addPlayer(event)">
           <div class="form-group">
             <label for="p-name">Nombre de las Integrantes</label>
-            <input type="text" id="p-name" placeholder="Ej. Jugadora 1 / Jugadora 2" required>
+            <input type="text" id="p-name" placeholder="Ej. Elena / Ana" required>
           </div>
           <div class="form-group">
             <label for="p-level">Nivel / Categoría</label>
@@ -230,47 +229,47 @@
       </div>
     </section>
 
-    <!-- TAB 2: COORDINAR PARTIDO -->
+    <!-- TAB 2: COORDINAR / AGENDA -->
     <section id="coordinar" class="tab-content">
       <div class="card">
         <h2>Proponer Partido (3 Fechas/Horas)</h2>
         <form id="form-proposal" onsubmit="createProposal(event)">
           <div class="form-group">
-            <label>Pareja Propuesta 1</label>
-            <input type="text" id="p1-names" placeholder="Ej. Elena / Ana" required>
+            <label for="p1-select">Pareja 1</label>
+            <select id="p1-select" required></select>
           </div>
           <div class="form-group">
-            <label>Pareja Propuesta 2 (Rival)</label>
-            <input type="text" id="p2-names" placeholder="Ej. Kiko / Javi" required>
+            <label for="p2-select">Pareja 2 (Rival)</label>
+            <select id="p2-select" required></select>
           </div>
           <div class="form-group">
-            <label>Club / Ubicación</label>
-            <input type="text" id="match-club" placeholder="Ej. Pádel Club Alcobendas" required>
+            <label for="match-club">Club / Ubicación</label>
+            <input type="text" id="match-club" value="CD Jarama" required>
           </div>
 
           <p style="font-weight:600; font-size:0.85rem; margin: 12px 0 8px;">Propón 3 opciones de fecha y hora:</p>
           
           <div class="option-box">
-            <div class="option-header">Opción A</div>
+            <label style="font-size:0.75rem;">Opción A</label>
             <input type="datetime-local" id="opt-a" required>
           </div>
 
           <div class="option-box">
-            <div class="option-header">Opción B</div>
+            <label style="font-size:0.75rem;">Opción B</label>
             <input type="datetime-local" id="opt-b" required>
           </div>
 
           <div class="option-box">
-            <div class="option-header">Opción C</div>
+            <label style="font-size:0.75rem;">Opción C</label>
             <input type="datetime-local" id="opt-c" required>
           </div>
 
-          <button type="submit" id="btn-add-prop" class="btn">Enviar Propuesta de 3 Fechas</button>
+          <button type="submit" class="btn">💾 Guardar propuesta de 3 fechas</button>
         </form>
       </div>
 
       <div class="card">
-        <h2>Propuestas Activas y Partidos</h2>
+        <h2>Agenda de Partidos y Propuestas</h2>
         <div id="proposals-list"></div>
       </div>
     </section>
@@ -288,11 +287,11 @@
           <label>Marcador por Sets</label>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
-              <label style="font-size:0.75rem;">Set 1 (P1 - P2)</label>
+              <label style="font-size:0.75rem;">Set 1</label>
               <input type="text" id="s1" placeholder="Ej. 6-4" required>
             </div>
             <div>
-              <label style="font-size:0.75rem;">Set 2 (P1 - P2)</label>
+              <label style="font-size:0.75rem;">Set 2</label>
               <input type="text" id="s2" placeholder="Ej. 3-6" required>
             </div>
           </div>
@@ -301,7 +300,7 @@
             <input type="text" id="s3" placeholder="Ej. 10-8">
           </div>
 
-          <button type="submit" id="btn-add-res" class="btn btn-success">💾 Guardar Resultado</button>
+          <button type="submit" class="btn btn-success">💾 Guardar Resultado</button>
         </form>
       </div>
 
@@ -313,12 +312,12 @@
   </main>
 
   <footer>
-    Ranking Pádel TPS App • SDD + Google Sheets Sync
+    Ranking Pádel TPS App • SDD Architecture
   </footer>
 
   <script>
-    // ⚠️ REEMPLAZA ESTA URL CON TU URL DE GOOGLE APPS SCRIPT
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmm_ybrn87_lHee8dBsMRUSgBOKTV4NkF_4yo7qqPmBVQlW6b4A-T0jdpbI428BIVmXw/exec';
+    // ⚠️ REEMPLAZA ESTA URL CON TU URL REAL DE GOOGLE APPS SCRIPT
+    const SCRIPT_URL = 'TU_URL_DE_APPS_SCRIPT_AQUI';
 
     let players = [];
     let proposals = [];
@@ -335,9 +334,8 @@
       event.target.classList.add('active');
     }
 
-    // CARGAR DATOS EN TIEMPO REAL DESDE GOOGLE SHEETS
     async function loadDataFromSheets() {
-      if (SCRIPT_URL.includes('TU_URL')) return;
+      if (!SCRIPT_URL || SCRIPT_URL.includes('TU_URL')) return;
       showLoading(true);
       try {
         const res = await fetch(`${SCRIPT_URL}?action=getData`);
@@ -349,6 +347,7 @@
           results = data.results || [];
 
           renderPlayers();
+          updateProposalDropdowns();
           renderProposals();
           renderResults();
           updateMatchSelect();
@@ -360,7 +359,6 @@
       }
     }
 
-    // RENDERIZADO
     function renderPlayers() {
       const list = document.getElementById('player-list');
       const count = document.getElementById('player-count');
@@ -370,8 +368,27 @@
       players.forEach(p => {
         const li = document.createElement('li');
         li.className = 'player-item';
-        li.innerHTML = `<span><strong>${p.nombre}</strong></span><span class="badge">${p.nivel}</span>`;
+        li.innerHTML = `<span><strong>${p.nombre}</strong></span><span class="badge">${p.nivel || 'Intermedio'}</span>`;
         list.appendChild(li);
+      });
+    }
+
+    function updateProposalDropdowns() {
+      const p1Select = document.getElementById('p1-select');
+      const p2Select = document.getElementById('p2-select');
+      p1Select.innerHTML = '<option value="">-- Selecciona Pareja 1 --</option>';
+      p2Select.innerHTML = '<option value="">-- Selecciona Pareja 2 --</option>';
+
+      players.forEach(p => {
+        const opt1 = document.createElement('option');
+        opt1.value = p.nombre;
+        opt1.textContent = p.nombre;
+        p1Select.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = p.nombre;
+        opt2.textContent = p.nombre;
+        p2Select.appendChild(opt2);
       });
     }
 
@@ -390,7 +407,7 @@
         document.getElementById('form-player').reset();
         await loadDataFromSheets();
       } catch (err) {
-        alert("Error al guardar jugador.");
+        alert("Error al guardar pareja.");
       } finally {
         showLoading(false);
       }
@@ -398,15 +415,20 @@
 
     async function createProposal(e) {
       e.preventDefault();
-      const p1 = document.getElementById('p1-names').value.trim();
-      const p2 = document.getElementById('p2-names').value.trim();
+      const p1 = document.getElementById('p1-select').value;
+      const p2 = document.getElementById('p2-select').value;
       const club = document.getElementById('match-club').value.trim();
       const optA = document.getElementById('opt-a').value;
       const optB = document.getElementById('opt-b').value;
       const optC = document.getElementById('opt-c').value;
 
+      if (p1 === p2) {
+        alert("Selecciona dos parejas distintas.");
+        return;
+      }
+
       showLoading(true);
-      const payload = { action: 'addProposal', id: Date.now(), p1, p2, club, optA, optB, optC, confirmada: '' };
+      const payload = { action: 'addProposal', id: Date.now(), p1, p2, club, optA, optB, optC, confirmada: '', pista: '' };
 
       try {
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -434,14 +456,34 @@
       }
     }
 
-    function generateGCalLink(p1, p2, club, startIso) {
+    // FUNCIÓN PARA ASIGNAR / EDITAR LA PISTA ASIGNADA POR EL CLUB
+    async function updateCourt(proposalId) {
+      const courtName = prompt("Introduce el número o nombre de la pista asignada por el club (ej. Pista 4):");
+      if (courtName === null) return;
+
+      showLoading(true);
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'updateCourt', id: proposalId, pista: courtName })
+        });
+        await loadDataFromSheets();
+      } catch (err) {
+        alert("Error al actualizar la pista.");
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function generateGCalLink(p1, p2, club, startIso, courtStr) {
       const startDate = new Date(startIso);
       const endDate = new Date(startDate.getTime() + 90 * 60 * 1000);
       const formatGDate = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
 
-      const title = encodeURIComponent(`Partido de Pádel: ${p1} vs ${p2}`);
-      const details = encodeURIComponent(`Partido de Pádel - Ranking TPS.\nDuración: 90 min.`);
-      const location = encodeURIComponent(club);
+      const fullLocation = courtStr ? `${club} (${courtStr})` : club;
+      const title = encodeURIComponent(`Partido Pádel: ${p1} vs ${p2}`);
+      const details = encodeURIComponent(`Partido de Pádel - Ranking TPS.\nUbicación: ${fullLocation}\nDuración: 90 min.`);
+      const location = encodeURIComponent(fullLocation);
       const dates = `${formatGDate(startDate)}/${formatGDate(endDate)}`;
 
       return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
@@ -452,7 +494,7 @@
       container.innerHTML = '';
 
       if (proposals.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay propuestas activas.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos ni propuestas activas.</p>';
         return;
       }
 
@@ -461,17 +503,23 @@
         div.className = 'match-card';
 
         if (p.confirmada) {
-          const gcalUrl = generateGCalLink(p.p1, p.p2, p.club, p.confirmada);
+          const courtText = p.pista ? ` (📍 ${p.pista})` : '';
+          const gcalUrl = generateGCalLink(p.p1, p.p2, p.club, p.confirmada, p.pista);
           const dateStr = new Date(p.confirmada).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
           
           div.innerHTML = `
             <span class="status-confirmed">✓ Confirmado</span>
             <p style="margin-top:6px;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-            <p style="font-size:0.85rem; color:var(--text-muted);">📍 ${p.club}</p>
-            <p style="font-size:0.85rem; font-weight:600; color:var(--primary);">📅 ${dateStr} (90 min)</p>
-            <a href="${gcalUrl}" target="_blank" class="btn btn-secondary" style="margin-top:8px; text-decoration:none;">
-              📅 Añadir a Google Calendar
-            </a>
+            <p style="font-size:0.85rem; color:var(--text-muted);">📍 ${p.club}${courtText}</p>
+            <p style="font-size:0.85rem; font-weight:600; color:var(--primary);">📅 ${dateStr}</p>
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+              <button onclick="updateCourt(${p.id})" class="btn btn-secondary btn-sm">
+                ${p.pista ? '✏️ Cambiar Pista' : '📍 Asignar Pista'}
+              </button>
+              <a href="${gcalUrl}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
+                📅 Añadir a Google Calendar
+              </a>
+            </div>
           `;
         } else {
           const opts = [p.optA, p.optB, p.optC];
@@ -564,7 +612,6 @@
       });
     }
 
-    // CARGAR AL INICIAR
     loadDataFromSheets();
   </script>
 </body>
