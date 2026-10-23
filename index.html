@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ranking Pádel TPS</title>
     <style>
         :root {
@@ -10,7 +10,8 @@
             --primary-dark: #1557b0;
             --bg-color: #f4f6f8;
             --card-bg: #ffffff;
-            --text-color: #333333;
+            --text-color: #202124;
+            --text-secondary: #5f6368;
             --border-color: #dadce0;
         }
 
@@ -28,34 +29,34 @@
             color: white;
             padding: 1rem;
             text-align: center;
-            font-size: 1.25rem;
-            font-weight: bold;
+            font-size: 1.2rem;
+            font-weight: 600;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Barra de Pestañas de Navegación */
+        /* Barra de Pestañas de Navegación (Estilo App Móvil) */
         .tabs-nav {
             display: flex;
             background-color: #ffffff;
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
 
         .tab-btn {
             flex: 1;
-            padding: 0.9rem 0.5rem;
+            padding: 0.85rem 0.25rem;
             text-align: center;
             background: none;
             border: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #5f6368;
+            color: var(--text-secondary);
             cursor: pointer;
             border-bottom: 3px solid transparent;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .tab-btn.active {
@@ -64,10 +65,13 @@
             background-color: #f8f9fa;
         }
 
+        /* Contenedor adaptado a móvil */
         .container {
-            max-width: 800px;
+            width: 100%;
+            max-width: 600px;
             margin: 0 auto;
-            padding: 1rem;
+            padding: 0.75rem;
+            box-sizing: border-box;
         }
 
         .tab-content {
@@ -81,29 +85,30 @@
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
         h2 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: var(--primary-color);
             margin-top: 0;
+            margin-bottom: 0.75rem;
             border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
         }
 
         th, td {
-            padding: 0.75rem;
+            padding: 0.65rem 0.5rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
@@ -111,25 +116,27 @@
         th {
             background-color: #f8f9fa;
             font-weight: 600;
+            color: var(--text-secondary);
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 0.85rem;
         }
 
         label {
             display: block;
-            margin-bottom: 0.3rem;
-            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
             font-weight: 600;
+            color: var(--text-secondary);
         }
 
         select, input {
             width: 100%;
-            padding: 0.65rem;
+            padding: 0.6rem;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 0.95rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
             box-sizing: border-box;
             background-color: #fff;
         }
@@ -138,13 +145,14 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 0.75rem 1rem;
-            border-radius: 4px;
-            font-size: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
             font-weight: 600;
             width: 100%;
             cursor: pointer;
-            transition: background-color 0.2s;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
         }
 
         button.action-btn:active {
@@ -153,14 +161,9 @@
 
         .loading {
             text-align: center;
-            padding: 2rem;
-            color: #666;
-        }
-
-        @media (min-width: 600px) {
-            .container {
-                padding: 2rem;
-            }
+            padding: 1.5rem;
+            color: var(--text-secondary);
+            font-style: italic;
         }
     </style>
 </head>
@@ -193,15 +196,15 @@
                 <h2>📅 Agenda y Partidos</h2>
                 
                 <!-- Listado superior -->
-                <div style="margin-bottom: 1.5rem;">
-                    <p style="font-size: 0.85rem; color: #666;">Partidos propuestos y confirmados:</p>
+                <div style="margin-bottom: 1.25rem;">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0;">Partidos propuestos y confirmados:</p>
                     <div id="proposals-container" class="loading">Cargando agenda...</div>
                 </div>
 
-                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.25rem 0;">
 
                 <!-- Formulario inferior -->
-                <h3 style="font-size: 1rem; color: #333; margin-top: 0;">Proponer nuevas fechas</h3>
+                <h3 style="font-size: 0.95rem; color: var(--text-color); margin-top: 0; margin-bottom: 0.75rem;">Proponer nuevas fechas</h3>
                 <form id="proposal-form">
                     <div class="form-group">
                         <label for="prop-p1">Pareja 1 (Retadora)</label>
@@ -243,10 +246,8 @@
     </div>
 
     <script>
-        // ⚠️ ASEGÚRATE DE TENER TU URL DE APPS SCRIPT AQUÍ
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXUQgZv7zUf9-llXOzfri--KF5B8d_bmu5dqitMxUGIiWvtpiLdectjojZh5MfL7ugLg/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQoUP-wKiwcv-GrkQ_ohyTQlOqXAl5sMFq4NLB16HaAeA2M3cRPsqKX9qxmn5matrdJg/exec';
 
-        // Lógica para cambiar entre pestañas visuales
         function switchTab(tabName, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -312,8 +313,8 @@
                     }
                 })
                 .catch(err => {
-                    console.error('Error al cargar datos:', err);
-                    document.getElementById('players-section').innerHTML = '<p style="color:red;">Error al conectar con el servidor.</p>';
+                    console.error('Error al conectar:', err);
+                    document.getElementById('players-section').innerHTML = '<p style="color:red;">Error de conexión.</p>';
                 });
         }
 
@@ -325,10 +326,10 @@
             }
 
             let html = `<table>
-                <thead><tr><th>Pareja</th><th>Nivel</th><th>Puntos</th></tr></thead><tbody>`;
+                <thead><tr><th>Pareja</th><th>Nivel</th><th style="text-align:right;">Ptos</th></tr></thead><tbody>`;
             
             players.forEach(p => {
-                html += `<tr><td><strong>${p.nombre}</strong></td><td>${p.nivel}</td><td>${p.puntos}</td></tr>`;
+                html += `<tr><td><strong>${p.nombre}</strong></td><td>${p.nivel}</td><td style="text-align:right;"><strong>${p.puntos}</strong></td></tr>`;
             });
             
             html += `</tbody></table>`;
@@ -348,19 +349,18 @@
             select2.innerHTML = options;
         }
 
-        // Formateador estricto para evitar desfases de día por zona horaria
+        /* BLINDAJE ABSOLUTO DE FECHA: Lee estrictamente el string sin conversiones UTC */
         function formatLocalDate(dateString) {
-            if (!dateString) return 'Pendiente';
+            if (!dateString || dateString.trim() === '') return '<span style="color:#b06000; font-weight:600;">Pendiente</span>';
+            
             if (typeof dateString === 'string' && dateString.includes('T')) {
-                try {
-                    const parts = dateString.split('T');
-                    const dateParts = parts[0].split('-'); // [Año, Mes, Día]
-                    const timePart = parts[1].substring(0, 5); // HH:mm
-                    if(dateParts.length === 3) {
-                        return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]} ${timePart}`;
-                    }
-                } catch(e) {
-                    console.error("Error parseando fecha", e);
+                const parts = dateString.split('T');
+                const dateParts = parts[0].split('-'); // [Año, Mes, Día]
+                const timePart = parts[1] ? parts[1].substring(0, 5) : ''; // HH:mm
+                
+                if (dateParts.length === 3) {
+                    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                    return timePart ? `${formattedDate} ${timePart}` : formattedDate;
                 }
             }
             return dateString;
@@ -369,7 +369,7 @@
         function renderProposals(proposals) {
             const container = document.getElementById('proposals-container');
             if (!proposals || proposals.length === 0) {
-                container.innerHTML = '<p>No hay propuestas activas.</p>';
+                container.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No hay propuestas activas.</p>';
                 return;
             }
 
@@ -383,17 +383,24 @@
                 const optCFormatted = formatLocalDate(prop.optC);
 
                 html += `<tr>
-                    <td>
-                        <strong>${prop.p1}</strong> vs <strong>${prop.p2}</strong><br>
-                        <small style="color:#666;">Club: ${prop.club}</small><br>
-                        <small>A: ${optAFormatted} | B: ${optBFormatted} | C: ${optCFormatted}</small>
+                    <td style="line-height: 1.35;">
+                        <strong>${prop.p1}</strong><br>
+                        <span style="color: var(--text-secondary);">vs ${prop.p2}</span><br>
+                        <small style="color: var(--primary-color); font-weight:600;">📍 ${prop.club}</small><br>
+                        <div style="margin-top: 4px; font-size: 0.8rem; color: var(--text-secondary);">
+                            <span><strong>A:</strong> ${optAFormatted}</span><br>
+                            <span><strong>B:</strong> ${optBFormatted}</span><br>
+                            <span><strong>C:</strong> ${optCFormatted}</span>
+                        </div>
                     </td>
-                    <td>
-                        <div><strong>Conf:</strong> ${confFormatted}</div>
-                        <div style="margin-top: 5px;">
-                            <label style="font-size: 0.75rem; display:inline;">Pista:</label>
-                            <input type="text" value="${prop.pista || ''}" placeholder="Ej. Pista 3" 
-                                style="width: 90px; padding: 2px 4px; display:inline-block; font-size: 0.8rem;"
+                    <td style="vertical-align: top;">
+                        <div style="margin-bottom: 6px; font-size: 0.8rem;">
+                            <strong>Conf:</strong><br>${confFormatted}
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; margin-bottom: 2px;">Pista:</label>
+                            <input type="text" value="${prop.pista || ''}" placeholder="Ej. P3" 
+                                style="width: 75px; padding: 3px 6px; font-size: 0.8rem;"
                                 onchange="updateCourt(${prop.id}, this.value)">
                         </div>
                     </td>
@@ -426,7 +433,7 @@
         function renderResults(results) {
             const container = document.getElementById('results-section');
             if (!results || results.length === 0) {
-                container.innerHTML = '<p>No hay resultados registrados todavía.</p>';
+                container.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No hay resultados registrados.</p>';
                 return;
             }
 
@@ -435,9 +442,9 @@
             
             results.forEach(r => {
                 html += `<tr>
-                    <td>${r.p1} vs ${r.p2}</td>
-                    <td><strong>${r.set1} | ${r.set2} ${r.set3 ? '| ' + r.set3 : ''}</strong></td>
-                    <td>${r.fecha || ''}</td>
+                    <td><strong>${r.p1}</strong> vs ${r.p2}</td>
+                    <td><strong style="color: var(--primary-color);">${r.set1}</strong></td>
+                    <td style="color: var(--text-secondary);">${r.fecha || ''}</td>
                 </tr>`;
             });
 
