@@ -203,6 +203,12 @@
   <main>
     <!-- TAB 1: INTEGRANTES -->
     <section id="integrantes" class="tab-content active">
+ <div class="card">
+        <h2>Miembros del Grupo (<span id="player-count">0</span>)</h2>
+        <ul id="player-list" class="player-list"></ul>
+      </div>
+    </section>
+      
       <div class="card">
         <h2>Añadir Nuevo Integrante</h2>
         <form id="form-player" onsubmit="addPlayer(event)">
@@ -221,12 +227,6 @@
           <button type="submit" id="btn-add-p" class="btn">＋ Registrar Integrante</button>
         </form>
       </div>
-
-      <div class="card">
-        <h2>Miembros del Grupo (<span id="player-count">0</span>)</h2>
-        <ul id="player-list" class="player-list"></ul>
-      </div>
-    </section>
 
     <!-- TAB 2: COORDINAR PARTIDO -->
     <section id="coordinar" class="tab-content">
