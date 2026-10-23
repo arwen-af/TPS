@@ -165,6 +165,9 @@
 
     .player-list {
       list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: left; /* 👈 Asegura que el texto dentro no se centre */
     }
 
     .player-item {
@@ -173,6 +176,7 @@
       align-items: center;
       padding: 10px 12px;
       border-bottom: 1px solid var(--border-color);
+    text-align: left; /* 👈 Alineación izquierda estricta */
     }
 
     .player-item:last-child {
@@ -399,12 +403,17 @@
         return;
       }
 
-      let html = `<ul class="player-list">`;
+      let html = `<ul class="player-list" style="text-align: left; padding: 0; margin: 0;">`;
       players.forEach(p => {
+        // Solo muestra el nivel entre paréntesis si la celda de Google Sheets tiene contenido real
+        const nivelHtml = (p.nivel && p.nivel.trim() !== '') 
+          ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${p.nivel})</span>` 
+          : '';
+
         html += `
-          <li class="player-item">
-            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${p.nivel})</span></span>
-            <span class="badge">${p.puntos} pts</span>
+          <li class="player-item" style="text-align: left; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border-color);">
+            <span style="font-style: normal;"><strong>${p.nombre}</strong> ${nivelHtml}</span>
+            <span class="badge" style="font-style: normal;">${p.puntos} pts</span>
           </li>
         `;
       });
