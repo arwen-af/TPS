@@ -340,28 +340,39 @@ function formatMatchDate(dateStr) {
     }
 
     // Renderiza participantes mostrando el nivel exacto o vacío, y los puntos de la Columna D
-    function renderPlayers(players) {
-      const container = document.getElementById('players-section');
-      if (!players || players.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay jugadores registrados.</p>';
-        return;
-      }
+    // Renderiza participantes omitiendo etiquetas vacías o valores por defecto no deseados
+function renderPlayers(players) {
+  const container = document.getElementById('players-section');
+  if (!players || players.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay jugadores registrados.</p>';
+    return;
+  }
 
-      let html = `<ul class="player-list">`;
-      players.forEach(p => {
-        const nivelTxt = p.nivel ? p.nivel.trim() : '';
-        const nivelHtml = nivelTxt !== '' ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${nivelTxt})</span>` : '';
+  let html = `<ul class="player-list">`;
+  players.forEach(p => {
+    // 1. Limpiamos espacios y pasamos a minúsculas para evaluar de forma estricta
+    const rawNivel = p.nivel ? String(p.nivel).trim() : '';
+    const lowerNivel = rawNivel.toLowerCase();
 
-        html += `
-          <li class="player-item">
-            <span><strong>${p.nombre}</strong> ${nivelHtml}</span>
-            <span class="badge">${p.puntos} pts</span>
-          </li>
-        `;
-      });
-      html += `</ul>`;
-      container.innerHTML = html;
-    }
+    // 2. Comprobamos que NO esté vacío, NO sea 'undefined', NO sea 'null' y NO sea 'intermedio'
+    const esValido = rawNivel !== '' && 
+                     lowerNivel !== 'undefined' && 
+                     lowerNivel !== 'null' && 
+                     lowerNivel !== 'intermedio';
+
+    // 3. Solo si tiene un nivel real asignado (ej. "Avanzado", "Iniciación", etc.) se muestra la etiqueta
+    const nivelHtml = esValido ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${rawNivel})</span>` : '';
+
+    html += `
+      <li class="player-item">
+        <span><strong>${p.nombre}</strong> ${nivelHtml}</span>
+        <span class="badge">${p.puntos} pts</span>
+      </li>
+    `;
+  });
+  html += `</ul>`;
+  container.innerHTML = html;
+}
 
     // Renderiza la agenda usando optA y la fecha confirmada literal de Google Sheets
     function renderProposals(proposals) {
