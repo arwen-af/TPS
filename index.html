@@ -303,17 +303,19 @@
     // SUSTITUYE AQUÍ TU URL DE GOOGLE APPS SCRIPT
     const SCRIPT_URL = "SUSTITUYE_AQUI_TU_URL_DE_APPS_SCRIPT";
 
-    // Devuelve la fecha tal cual se lee de la celda de Google Sheets (respetando getDisplayValues)
-    function formatMatchDate(dateStr) {
-      if (!dateStr || String(dateStr).trim() === '') return '';
-      const str = String(dateStr).trim();
-      if (str.includes('T')) {
-        const [datePart, timePart] = str.split('T');
-        return `${datePart}, ${timePart.substring(0, 5)}`;
-      }
-      return str;
-    }
-
+    // Devuelve el valor exacto de la celda de Google Sheets
+function formatMatchDate(dateStr) {
+  if (!dateStr || String(dateStr).trim() === '') return '';
+  const str = String(dateStr).trim();
+  
+  // Si la fecha proviniese de un input datetime-local ISO (ej. 2026-11-14T02:30)
+  if (str.includes('T')) {
+    const [datePart, timePart] = str.split('T');
+    return `${datePart}, ${timePart.substring(0, 5)}`;
+  }
+  
+  return str; // Texto literal de la celda en Google Sheets
+}
     function switchTab(tabId, btnElement) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -363,44 +365,53 @@
 
     // Renderiza la agenda usando optA y la fecha confirmada literal de Google Sheets
     function renderProposals(proposals) {
-      const container = document.getElementById('proposals-list');
-      if (!proposals || proposals.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
-        return;
-      }
+  const container = document.getElementById('proposals-list');
+  if (!proposals || proposals.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
+    return;
+  }
 
-      container.innerHTML = '';
-      proposals.forEach(p => {
-        const rawFecha = p.confirmada;
-        const fechaMostrar = rawFecha ? formatMatchDate(rawFecha) : formatMatchDate(p.optA);
+  container.innerHTML = '';
+  proposals.forEach(p => {
+    const rawFecha = p.confirmada;
+    // Lee p.optA para mantener total sincronía con el backend
+    const fechaMostrar = rawFecha ? formatMatchDate(rawFecha) : formatMatchDate(p.optA);
 
-        const div = document.createElement('div');
-        div.className = 'match-card';
-        div.innerHTML = `
-          <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club}</p>
-          <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-          <p style="font-size:0.8rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
-        `;
-        container.appendChild(div);
-      });
-    }
+    const div = document.createElement('div');
+    div.className = 'match-card';
+    div.innerHTML = `
+      <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club} ${p.pista ? '• ' + p.pista : ''}</p>
+      <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
+      <p style="font-size:0.8rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
+    `;
+    container.appendChild(div);
+  });
+}
 
     // Tabla de marcadores para hasta 5 Sets
+    // Renderiza los partidos disponibles en la pestaña Resultados con la tabla de marcadores a 5 sets
     function renderActiveMatches(proposals) {
       const container = document.getElementById('active-matches-container');
+      
       if (!proposals || proposals.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles para registrar resultado.</p>';
         return;
       }
 
       container.innerHTML = '';
+
       proposals.forEach(match => {
-        const fechaTxt = formatMatchDate(match.confirmada || match.optA) || 'Pendiente';
+        // Lee primero la fecha confirmada; si no existe, toma la primera opción propuesta (optA)
+        const rawFecha = match.confirmada || match.optA || '';
+        const fechaTxt = rawFecha ? formatMatchDate(rawFecha) : 'Pendiente de fecha';
+        const pistaTxt = match.pista ? ` • Pista: ${match.pista}` : '';
 
         const div = document.createElement('div');
         div.className = 'match-card';
         div.innerHTML = `
-          <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">📍 ${match.club} (${fechaTxt})</p>
+          <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
+            📍 ${match.club}${pistaTxt} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal;">(${fechaTxt})</span>
+          </p>
           <table class="score-table">
             <thead>
               <tr>
@@ -415,23 +426,23 @@
             <tbody>
               <tr>
                 <td style="text-align:left; font-weight:600;">${match.p1}</td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s4-p1-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s5-p1-${match.id}"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s4-p1-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s5-p1-${match.id}" placeholder="0"></td>
               </tr>
               <tr>
                 <td style="text-align:left; font-weight:600;">${match.p2}</td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s4-p2-${match.id}"></td>
-                <td><input type="number" min="0" max="7" class="score-input" id="s5-p2-${match.id}"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s4-p2-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s5-p2-${match.id}" placeholder="0"></td>
               </tr>
             </tbody>
           </table>
-          <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult(${match.id}, '${match.p1}', '${match.p2}')">
+          <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult('${match.id}', '${match.p1}', '${match.p2}')">
             💾 Guardar y Finalizar Partido
           </button>
         `;
