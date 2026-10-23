@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ranking de Pádel - TPS</title>
+  <title>Ranking Pádel TPS</title>
   <style>
     :root {
       --primary: #1a73e8;
@@ -23,7 +23,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      font-style: normal; /* Cero cursivas en toda la app */
+      font-style: normal !important;
     }
 
     body {
@@ -105,6 +105,7 @@
       margin-bottom: 16px;
       border: 1px solid var(--border-color);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      text-align: left;
     }
 
     .card h2 {
@@ -167,7 +168,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      text-align: left; /* 👈 Asegura que el texto dentro no se centre */
+      text-align: left;
     }
 
     .player-item {
@@ -176,7 +177,7 @@
       align-items: center;
       padding: 10px 12px;
       border-bottom: 1px solid var(--border-color);
-    text-align: left; /* 👈 Alineación izquierda estricta */
+      text-align: left;
     }
 
     .player-item:last-child {
@@ -192,37 +193,45 @@
       font-weight: 600;
     }
 
-    .option-box {
-      background: #f8f9fa;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
     .match-card {
-      border-left: 4px solid var(--primary);
+      background: #fafafa;
       padding: 12px;
       margin-bottom: 12px;
-      background: #fafafa;
-      border-radius: 0 8px 8px 0;
-      border-top: 1px solid var(--border-color);
-      border-right: 1px solid var(--border-color);
-      border-bottom: 1px solid var(--border-color);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
       border-left: 4px solid var(--primary);
+      text-align: left;
     }
 
-    .match-status {
-      display: inline-block;
-      padding: 2px 8px;
+    /* Tabla de anotación por sets */
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .score-table th, .score-table td {
+      border: 1px solid var(--border-color);
+      padding: 6px 4px;
+    }
+
+    .score-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .score-input {
+      width: 42px;
+      text-align: center;
+      padding: 4px;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      margin-bottom: 6px;
+      font-size: 0.9rem;
+      background: #fff;
     }
-
-    .status-pending { background: #fef7e0; color: #b06000; }
-    .status-confirmed { background: #e6f4ea; color: #137333; }
 
     footer {
       text-align: center;
@@ -234,21 +243,20 @@
     }
 
     .loading {
-  text-align: center;
-  padding: 1.5rem;
-  color: var(--text-muted);
-  font-style: normal; /* Asegura texto recto */
-}
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-style: normal !important;
+    }
   </style>
 </head>
 <body>
 
   <header>
     <h1>🎾 Ranking Pádel TPS</h1>
-    <p>Prueba de Concepto (POC)</p>
+    <p>Gestión y seguimiento de torneos</p>
   </header>
 
-  <!-- PESTAÑAS DE NAVEGACIÓN SUPERIORES -->
   <nav>
     <button class="tab-btn active" onclick="switchTab('tab-players', this)">👥 Participantes</button>
     <button class="tab-btn" onclick="switchTab('tab-agenda', this)">📅 Agenda</button>
@@ -256,143 +264,98 @@
   </nav>
 
   <main>
-    <!-- SECCIÓN 1: PARTICIPANTES -->
+    <!-- PESTAÑA 1: PARTICIPANTES -->
     <section id="tab-players" class="tab-content active">
       <div class="card">
-        <h2>👥 Listado de Parejas</h2>
-        <div id="players-section" class="loading">Cargando jugadores...</div>
+        <h2>👥 Parejas Registradas</h2>
+        <div id="players-section" class="loading">Cargando participantes...</div>
       </div>
     </section>
 
-    <!-- SECCIÓN 2: AGENDA (Listado arriba, Formulario abajo) -->
+    <!-- PESTAÑA 2: AGENDA -->
     <section id="tab-agenda" class="tab-content">
       <div class="card">
-        <h2>📅 Agenda de Partidos</h2>
-        <div style="margin-bottom: 1rem;">
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Partidos propuestos y confirmados:</p>
-          <div id="proposals-container" class="loading">Cargando agenda...</div>
-        </div>
+        <h2>📅 Partidos Propuestos y Confirmados</h2>
+        <div id="proposals-list" class="loading">Cargando partidos...</div>
       </div>
 
       <div class="card">
-        <h2>Proponer Nuevas Fechas</h2>
-        <form id="proposal-form">
+        <h2>➕ Proponer Nuevo Partido</h2>
+        <form id="proposal-form" onsubmit="submitProposal(event)">
           <div class="form-group">
-            <label for="prop-p1">Pareja 1 (Retadora)</label>
-            <select id="prop-p1" required></select>
-          </div>
-          <div class="form-group">
-            <label for="prop-p2">Pareja 2 (Defensora)</label>
-            <select id="prop-p2" required></select>
+            <label>Pareja 1:</label>
+            <select id="p1-select" required><option value="">Cargando...</option></select>
           </div>
           <div class="form-group">
-            <label for="prop-club">Club / Ubicación</label>
-            <input type="text" id="prop-club" value="CD Jarama" required>
+            <label>Pareja 2:</label>
+            <select id="p2-select" required><option value="">Cargando...</option></select>
           </div>
-          
-          <p style="font-weight:600; font-size:0.85rem; margin: 12px 0 8px;">Propón 3 opciones de fecha y hora:</p>
-          
-          <div class="option-box">
-            <label style="color:var(--primary); margin-bottom:4px;">Opción Fecha 1</label>
-            <input type="datetime-local" id="prop-optA" required>
+          <div class="form-group">
+            <label>Club / Ubicación:</label>
+            <input type="text" id="club-input" placeholder="Ej. Padel Club Moraleja" required>
           </div>
-          <div class="option-box">
-            <label style="color:var(--primary); margin-bottom:4px;">Opción Fecha 2</label>
-            <input type="datetime-local" id="prop-optB" required>
+          <div class="form-group">
+            <label>Opción Fecha 1:</label>
+            <input type="text" id="opt1-input" placeholder="Ej. Sábado 13 Nov - 18:00h" required>
           </div>
-          <div class="option-box">
-            <label style="color:var(--primary); margin-bottom:4px;">Opción Fecha 3</label>
-            <input type="datetime-local" id="prop-optC" required>
+          <div class="form-group">
+            <label>Opción Fecha 2:</label>
+            <input type="text" id="opt2-input" placeholder="Ej. Domingo 14 Nov - 11:00h">
           </div>
-
-          <button type="submit" class="btn" style="margin-top: 8px;">Guardar propuesta de 3 fechas</button>
+          <div class="form-group">
+            <label>Opción Fecha 3:</label>
+            <input type="text" id="opt3-input" placeholder="Ej. Lunes 15 Nov - 20:00h">
+          </div>
+          <button type="submit" class="btn">Enviar Propuesta</button>
         </form>
       </div>
     </section>
 
-    <!-- SECCIÓN 3: RESULTADOS -->
+    <!-- PESTAÑA 3: RESULTADOS -->
     <section id="tab-results" class="tab-content">
       <div class="card">
-        <h2>🏆 Resultados Recientes</h2>
-        <div id="results-section" class="loading">Cargando resultados...</div>
+        <h2>📝 Registrar Resultado en Directo</h2>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+          Completa los marcadores por set durante o al finalizar el partido:
+        </p>
+        <div id="active-matches-container" class="loading">Cargando partidos activos...</div>
+      </div>
+
+      <div class="card">
+        <h2>🏆 Historial de Resultados</h2>
+        <div id="results-section" class="loading">Cargando historial...</div>
       </div>
     </section>
   </main>
 
   <footer>
-    Ranking Pádel TPS App • SDD Methodology
+    TPS Padel Tracker • SDD Method
   </footer>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQoUP-wKiwcv-GrkQ_ohyTQlOqXAl5sMFq4NLB16HaAeA2M3cRPsqKX9qxmn5matrdJg/exec';
+    // URL DE TU GOOGLE APPS SCRIPT
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQoUP-wKiwcv-GrkQ_ohyTQlOqXAl5sMFq4NLB16HaAeA2M3cRPsqKX9qxmn5matrdJg/exec";
 
     function switchTab(tabId, btnElement) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btnElement.classList.add('active');
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadAppData();
-
-      document.getElementById('proposal-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const data = {
-          action: 'addProposal',
-          id: Date.now(),
-          p1: document.getElementById('prop-p1').value,
-          p2: document.getElementById('prop-p2').value,
-          club: document.getElementById('prop-club').value,
-          optA: document.getElementById('prop-optA').value,
-          optB: document.getElementById('prop-optB').value,
-          optC: document.getElementById('prop-optC').value,
-          confirmada: '',
-          pista: ''
-        };
-
-        const btn = this.querySelector('button');
-        btn.textContent = 'Guardando...';
-        btn.disabled = true;
-
-        fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        })
-        .then(() => {
-          alert('¡Propuesta guardada correctamente!');
-          this.reset();
-          btn.textContent = 'Guardar propuesta de 3 fechas';
-          btn.disabled = false;
-          setTimeout(loadAppData, 1500);
-        })
-        .catch(err => {
-          console.error('Error:', err);
-          alert('Hubo un error al guardar.');
-          btn.textContent = 'Guardar propuesta de 3 fechas';
-          btn.disabled = false;
-        });
-      });
-    });
 
     function loadAppData() {
       fetch(SCRIPT_URL + '?action=getData')
         .then(res => res.json())
         .then(data => {
-          if (data.status === 'success') {
-            renderPlayers(data.players);
-            renderSelectOptions(data.players);
-            renderProposals(data.proposals);
-            renderResults(data.results);
-          }
+          renderPlayers(data.players);
+          renderProposals(data.proposals);
+          renderActiveMatches(data.proposals);
+          renderResults(data.results);
+          populateSelects(data.players);
         })
         .catch(err => {
-          console.error('Error al conectar:', err);
-          document.getElementById('players-section').innerHTML = '<p style="color:red;">Error de conexión con el servidor.</p>';
+          console.error('Error al cargar datos:', err);
+          document.querySelectorAll('.loading').forEach(el => el.textContent = 'Error de conexión.');
         });
     }
 
@@ -403,17 +366,13 @@
         return;
       }
 
-      let html = `<ul class="player-list" style="text-align: left; padding: 0; margin: 0;">`;
+      let html = `<ul class="player-list">`;
       players.forEach(p => {
-        // Solo muestra el nivel entre paréntesis si la celda de Google Sheets tiene contenido real
-        const nivelHtml = (p.nivel && p.nivel.trim() !== '') 
-          ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${p.nivel})</span>` 
-          : '';
-
+        const nivelHtml = (p.nivel && p.nivel.trim() !== '') ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${p.nivel})</span>` : '';
         html += `
-          <li class="player-item" style="text-align: left; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border-color);">
-            <span style="font-style: normal;"><strong>${p.nombre}</strong> ${nivelHtml}</span>
-            <span class="badge" style="font-style: normal;">${p.puntos} pts</span>
+          <li class="player-item">
+            <span><strong>${p.nombre}</strong> ${nivelHtml}</span>
+            <span class="badge">${p.puntos} pts</span>
           </li>
         `;
       });
@@ -421,93 +380,77 @@
       container.innerHTML = html;
     }
 
-    function renderSelectOptions(players) {
-      const select1 = document.getElementById('prop-p1');
-      const select2 = document.getElementById('prop-p2');
-      
-      let options = '<option value="">Selecciona pareja...</option>';
-      players.forEach(p => {
-        options += `<option value="${p.nombre}">${p.nombre}</option>`;
-      });
-
-      select1.innerHTML = options;
-      select2.innerHTML = options;
-    }
-
-    function formatLocalDate(dateString) {
-      if (!dateString || dateString.trim() === '') return '';
-      if (dateString.length > 16 && dateString.includes(':')) {
-        return dateString.substring(0, 16);
-      }
-      return dateString;
-    }
-
     function renderProposals(proposals) {
-      const container = document.getElementById('proposals-container');
+      const container = document.getElementById('proposals-list');
       if (!proposals || proposals.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay propuestas activas.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
         return;
       }
 
       container.innerHTML = '';
-      proposals.forEach(prop => {
+      proposals.forEach(p => {
         const div = document.createElement('div');
         div.className = 'match-card';
-
-        const isConfirmed = prop.confirmada && prop.confirmada.trim() !== '';
-        
-        if (isConfirmed) {
-          div.innerHTML = `
-            <span class="match-status status-confirmed">✓ Confirmado</span>
-            <p><strong>${prop.p1}</strong> vs <strong>${prop.p2}</strong></p>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">📍 ${prop.club} ${prop.pista ? '• ' + prop.pista : ''}</p>
-            <p style="font-size:0.85rem; font-weight:600; color:var(--primary); margin-top:4px;">📅 ${formatLocalDate(prop.confirmada)}</p>
-          `;
-        } else {
-          div.innerHTML = `
-            <span class="match-status status-pending">⏳ Pendiente de Elección</span>
-            <p><strong>${prop.p1}</strong> vs <strong>${prop.p2}</strong></p>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">📍 ${prop.club}</p>
-            <div style="font-size:0.85rem; margin-top:6px;">
-              <div><strong>Opción A:</strong> ${formatLocalDate(prop.optA)}</div>
-              <div><strong>Opción B:</strong> ${formatLocalDate(prop.optB)}</div>
-              <div><strong>Opción C:</strong> ${formatLocalDate(prop.optC)}</div>
-            </div>
-            <div style="margin-top: 8px;">
-              <label style="font-size: 0.75rem; display:inline;">Asignar Pista:</label>
-              <input type="text" value="${prop.pista || ''}" placeholder="Ej. Pista 3" 
-                style="width: 110px; padding: 4px 8px; display:inline-block; font-size: 0.8rem; margin-left: 6px;"
-                onchange="updateCourt(${prop.id}, this.value)">
-            </div>
-          `;
-        }
+        div.innerHTML = `
+          <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club} ${p.pista ? '• ' + p.pista : ''}</p>
+          <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
+          <p style="font-size:0.8rem; color:var(--text-muted);">${p.confirmada ? 'Fecha: ' + p.confirmada : 'Propuestas: ' + p.opt1}</p>
+        `;
         container.appendChild(div);
       });
     }
 
-    function updateCourt(proposalId, courtValue) {
-      const data = {
-        action: 'updateCourt',
-        id: proposalId,
-        pista: courtValue
-      };
+    function renderActiveMatches(proposals) {
+      const container = document.getElementById('active-matches-container');
+      const confirmedMatches = proposals.filter(p => p.confirmada && p.confirmada.trim() !== '');
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(() => {
-        console.log('Pista actualizada:', courtValue);
-      })
-      .catch(err => console.error('Error al actualizar pista:', err));
+      if (!confirmedMatches || confirmedMatches.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos confirmados pendientes de resultado.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      confirmedMatches.forEach(match => {
+        const div = document.createElement('div');
+        div.className = 'match-card';
+        div.innerHTML = `
+          <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">📍 ${match.club} (${match.confirmada})</p>
+          <table class="score-table">
+            <thead>
+              <tr>
+                <th style="text-align:left;">Parejas</th>
+                <th>Set 1</th>
+                <th>Set 2</th>
+                <th>Set 3</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align:left; font-weight:600;">${match.p1}</td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${match.id}" placeholder="0"></td>
+              </tr>
+              <tr>
+                <td style="text-align:left; font-weight:600;">${match.p2}</td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${match.id}" placeholder="0"></td>
+                <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${match.id}" placeholder="0"></td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult(${match.id}, '${match.p1}', '${match.p2}')">
+            💾 Guardar y Finalizar Partido
+          </button>
+        `;
+        container.appendChild(div);
+      });
     }
 
     function renderResults(results) {
       const container = document.getElementById('results-section');
       if (!results || results.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay resultados registrados aún.</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos finalizados aún.</p>';
         return;
       }
 
@@ -515,14 +458,86 @@
       results.forEach(r => {
         const div = document.createElement('div');
         div.className = 'match-card';
+        div.style.borderLeftColor = 'var(--success)';
         div.innerHTML = `
-          <p><strong>${r.p1}</strong> vs <strong>${r.p2}</strong></p>
-          <p style="font-size:0.9rem; font-weight:bold; color:var(--primary); margin:4px 0;">Resultado: ${r.set1}</p>
+          <p style="font-size:0.85rem;"><strong>${r.p1}</strong> vs <strong>${r.p2}</strong></p>
+          <p style="font-size:0.85rem; font-weight:bold; color:var(--primary); margin:4px 0;">Resultado: ${r.set1}</p>
           <p style="font-size:0.75rem; color:var(--text-muted);">Jugado el: ${r.fecha || ''}</p>
         `;
         container.appendChild(div);
       });
     }
+
+    function populateSelects(players) {
+      const p1 = document.getElementById('p1-select');
+      const p2 = document.getElementById('p2-select');
+      p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
+      p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
+      players.forEach(p => {
+        p1.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
+        p2.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
+      });
+    }
+
+    function saveMatchResult(matchId, pareja1, pareja2) {
+      const s1p1 = document.getElementById(`s1-p1-${matchId}`).value || '0';
+      const s1p2 = document.getElementById(`s1-p2-${matchId}`).value || '0';
+      const s2p1 = document.getElementById(`s2-p1-${matchId}`).value || '0';
+      const s2p2 = document.getElementById(`s2-p2-${matchId}`).value || '0';
+      const s3p1 = document.getElementById(`s3-p1-${matchId}`).value || '0';
+      const s3p2 = document.getElementById(`s3-p2-${matchId}`).value || '0';
+
+      let resText = `${s1p1}-${s1p2}, ${s2p1}-${s2p2}`;
+      if (s3p1 !== '0' || s3p2 !== '0') {
+        resText += `, ${s3p1}-${s3p2}`;
+      }
+
+      const payload = {
+        action: 'saveResult',
+        id: matchId,
+        p1: pareja1,
+        p2: pareja2,
+        set1: resText,
+        fecha: new Date().toLocaleDateString()
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        alert('¡Resultado guardado correctamente!');
+        setTimeout(loadAppData, 1000);
+      });
+    }
+
+    function submitProposal(e) {
+      e.preventDefault();
+      const payload = {
+        action: 'addProposal',
+        p1: document.getElementById('p1-select').value,
+        p2: document.getElementById('p2-select').value,
+        club: document.getElementById('club-input').value,
+        opt1: document.getElementById('opt1-input').value,
+        opt2: document.getElementById('opt2-input').value,
+        opt3: document.getElementById('opt3-input').value
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        alert('¡Propuesta enviada con éxito!');
+        document.getElementById('proposal-form').reset();
+        setTimeout(loadAppData, 1000);
+      });
+    }
+
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', loadAppData);
   </script>
 </body>
 </html>
