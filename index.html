@@ -349,19 +349,13 @@
             select2.innerHTML = options;
         }
 
-        /* BLINDAJE ABSOLUTO DE FECHA: Lee estrictamente el string sin conversiones UTC */
+        /* LECTURA LITERAL PURA: Pinta exactamente lo que devuelve Google Sheets */
         function formatLocalDate(dateString) {
-            if (!dateString || dateString.trim() === '') return '<span style="color:#b06000; font-weight:600;">Pendiente</span>';
+            if (!dateString || dateString.trim() === '') return '<span style="color:#b06000; font-weight:600; font-style:normal;">Pendiente</span>';
             
-            if (typeof dateString === 'string' && dateString.includes('T')) {
-                const parts = dateString.split('T');
-                const dateParts = parts[0].split('-'); // [Año, Mes, Día]
-                const timePart = parts[1] ? parts[1].substring(0, 5) : ''; // HH:mm
-                
-                if (dateParts.length === 3) {
-                    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                    return timePart ? `${formattedDate} ${timePart}` : formattedDate;
-                }
+            // Si viene con segundos (ej: 13/11/2026 18:30:00), recortamos los segundos para dejarlo limpio (13/11/2026 18:30)
+            if (dateString.length > 16 && dateString.includes(':')) {
+                return dateString.substring(0, 16);
             }
             return dateString;
         }
