@@ -391,18 +391,18 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNzYttGHOGlq29ykSSe7mcJ-OcmE6FUnGmDLd2Tgue8kTzSuQKoVtwawEuj_E2Abd9LQ/exec";
 
     // Devuelve el valor exacto de la celda de Google Sheets
-function formatMatchDate(dateStr) {
-  if (!dateStr || String(dateStr).trim() === '') return '';
-  const str = String(dateStr).trim();
-  
-  // Si la fecha proviniese de un input datetime-local ISO (ej. 2026-11-14T02:30)
-  if (str.includes('T')) {
-    const [datePart, timePart] = str.split('T');
-    return `${datePart}, ${timePart.substring(0, 5)}`;
-  }
-  
-  return str; // Texto literal de la celda en Google Sheets
-}
+    function formatMatchDate(dateStr) {
+      if (!dateStr || String(dateStr).trim() === '') return '';
+      const str = String(dateStr).trim();
+      
+      if (str.includes('T')) {
+        const [datePart, timePart] = str.split('T');
+        return `${datePart}, ${timePart.substring(0, 5)}`;
+      }
+      
+      return str; 
+    }
+
     function switchTab(tabId, btnElement) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -426,68 +426,59 @@ function formatMatchDate(dateStr) {
         });
     }
 
-    // Renderiza participantes mostrando el nivel exacto o vacío, y los puntos de la Columna D
-    // Renderiza participantes omitiendo etiquetas vacías o valores por defecto no deseados
-function renderPlayers(players) {
-  const container = document.getElementById('players-section');
-  if (!players || players.length === 0) {
-    container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay jugadores registrados.</p>';
-    return;
-  }
+    function renderPlayers(players) {
+      const container = document.getElementById('players-section');
+      if (!players || players.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay jugadores registrados.</p>';
+        return;
+      }
 
-  let html = `<ul class="player-list">`;
-  players.forEach(p => {
-    // 1. Limpiamos espacios y pasamos a minúsculas para evaluar de forma estricta
-    const rawNivel = p.nivel ? String(p.nivel).trim() : '';
-    const lowerNivel = rawNivel.toLowerCase();
+      let html = `<ul class="player-list">`;
+      players.forEach(p => {
+        const rawNivel = p.nivel ? String(p.nivel).trim() : '';
+        const lowerNivel = rawNivel.toLowerCase();
 
-    // 2. Comprobamos que NO esté vacío, NO sea 'undefined', NO sea 'null' y NO sea 'intermedio'
-    const esValido = rawNivel !== '' && 
-                     lowerNivel !== 'undefined' && 
-                     lowerNivel !== 'null' && 
-                     lowerNivel !== 'intermedio';
+        const esValido = rawNivel !== '' && 
+                         lowerNivel !== 'undefined' && 
+                         lowerNivel !== 'null' && 
+                         lowerNivel !== 'intermedio';
 
-    // 3. Solo si tiene un nivel real asignado (ej. "Avanzado", "Iniciación", etc.) se muestra la etiqueta
-    const nivelHtml = esValido ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${rawNivel})</span>` : '';
+        const nivelHtml = esValido ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${rawNivel})</span>` : '';
 
-    html += `
-      <li class="player-item">
-        <span><strong>${p.nombre}</strong> ${nivelHtml}</span>
-        <span class="badge">${p.puntos} pts</span>
-      </li>
-    `;
-  });
-  html += `</ul>`;
-  container.innerHTML = html;
-}
+        html += `
+          <li class="player-item">
+            <span><strong>${p.nombre}</strong> ${nivelHtml}</span>
+            <span class="badge">${p.puntos} pts</span>
+          </li>
+        `;
+      });
+      html += `</ul>`;
+      container.innerHTML = html;
+    }
 
-    // Renderiza la agenda usando optA y la fecha confirmada literal de Google Sheets
     function renderProposals(proposals) {
-  const container = document.getElementById('proposals-list');
-  if (!proposals || proposals.length === 0) {
-    container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
-    return;
-  }
+      const container = document.getElementById('proposals-list');
+      if (!proposals || proposals.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
+        return;
+      }
 
-  container.innerHTML = '';
-  proposals.forEach(p => {
-    const rawFecha = p.confirmada;
-    // Lee p.optA para mantener total sincronía con el backend
-    const fechaMostrar = rawFecha ? formatMatchDate(rawFecha) : formatMatchDate(p.optA);
+      container.innerHTML = '';
+      proposals.forEach(p => {
+        const rawFecha = p.confirmada;
+        const fechaMostrar = rawFecha ? formatMatchDate(rawFecha) : formatMatchDate(p.optA);
 
-    const div = document.createElement('div');
-    div.className = 'match-card';
-    div.innerHTML = `
-      <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club} ${p.pista ? '• ' + p.pista : ''}</p>
-      <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-      <p style="font-size:0.8rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
-    `;
-    container.appendChild(div);
-  });
-}
+        const div = document.createElement('div');
+        div.className = 'match-card';
+        div.innerHTML = `
+          <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club} ${p.pista ? '• ' + p.pista : ''}</p>
+          <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
+          <p style="font-size:0.8rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
+        `;
+        container.appendChild(div);
+      });
+    }
 
-    // Tabla de marcadores para hasta 5 Sets
-    // Renderiza los partidos disponibles en la pestaña Resultados con la tabla de marcadores a 5 sets
     function renderActiveMatches(proposals) {
       const container = document.getElementById('active-matches-container');
       
@@ -499,7 +490,6 @@ function renderPlayers(players) {
       container.innerHTML = '';
 
       proposals.forEach(match => {
-        // Lee primero la fecha confirmada; si no existe, toma la primera opción propuesta (optA)
         const rawFecha = match.confirmada || match.optA || '';
         const fechaTxt = rawFecha ? formatMatchDate(rawFecha) : 'Pendiente de fecha';
         const pistaTxt = match.pista ? ` • Pista: ${match.pista}` : '';
@@ -640,8 +630,6 @@ function renderPlayers(players) {
       });
     }
 
-    document.addEventListener('DOMContentLoaded', loadAppData);
-
     // --- LÓGICA DE AUTENTICACIÓN Y PERFIL ---
     let currentUser = JSON.parse(localStorage.getItem('tps_current_user')) || null;
 
@@ -687,17 +675,14 @@ function renderPlayers(players) {
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-password').value;
 
-      // Simulamos validación local (en el futuro conectado a Google Sheets)
       let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
       let found = users.find(u => u.email === email && u.password === pass);
 
-      // Si no existe en la BD local pero hay un usuario por defecto
       if (!found && email === "demo@padel.com") {
         found = { nombre: "Jugador Demo", email: "demo@padel.com", nivel: "Intermedio", mano: "Diestro", posicion: "Drive" };
       }
 
       if (found || users.length >= 0) {
-        // Si no está registrado en localStorage pero queremos permitir acceso rápido de prueba:
         if (!found) {
           found = { nombre: email.split('@')[0], email: email, nivel: "Intermedio", mano: "Diestro", posicion: "Drive" };
         }
@@ -794,7 +779,6 @@ function renderPlayers(players) {
       currentUser[field] = value;
       localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
       
-      // Actualizar también en la base de datos local de usuarios
       let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
       let index = users.findIndex(u => u.email === currentUser.email);
       if (index !== -1) {
@@ -803,11 +787,10 @@ function renderPlayers(players) {
       }
     }
 
-    // Modificamos el evento DOMContentLoaded inicial para que ejecute primero checkAuth()
+    // Comprobación de estado inicial (SDD - Fase 1)
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
     });
-    
   </script>
 </body>
 </html>
