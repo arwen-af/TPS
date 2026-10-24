@@ -262,7 +262,7 @@
     <p>Gestión y seguimiento de torneos</p>
   </header>
 
-  <!-- La navegación principal solo se muestra si el usuario ha iniciado sesión -->
+  <!-- Navegación principal oculta hasta que se inicie sesión -->
   <nav id="main-nav" style="display: none;">
     <button class="tab-btn active" onclick="switchTab('tab-players', this)">👥 Participantes</button>
     <button class="tab-btn" onclick="switchTab('tab-agenda', this)">📅 Agenda</button>
@@ -387,7 +387,7 @@
   </footer>
 
   <script>
-    // URL DE GOOGLE APPS SCRIPT (Asegúrate de que sea tu URL correcta)
+    // URL DE GOOGLE APPS SCRIPT
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNzYttGHOGlq29ykSSe7mcJ-OcmE6FUnGmDLd2Tgue8kTzSuQKoVtwawEuj_E2Abd9LQ/exec";
 
     function formatMatchDate(dateStr) {
