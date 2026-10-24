@@ -218,21 +218,97 @@
       padding: 1.5rem;
       color: var(--text-muted);
     }
+    /* Estilos adicionales para Autenticación y Perfil */
+    #auth-wrapper {
+      padding: 20px;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .auth-tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 auto 12px auto;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🎾 Ranking Pádel TPS</h1>
+    <h1> Ranking Pádel TPS</h1>
     <p>Gestión y seguimiento de torneos</p>
   </header>
 
-  <nav>
+  <!-- La navegación principal solo se muestra si el usuario ha iniciado sesión -->
+  <nav id="main-nav" style="display: none;">
     <button class="tab-btn active" onclick="switchTab('tab-players', this)">👥 Participantes</button>
     <button class="tab-btn" onclick="switchTab('tab-agenda', this)">📅 Agenda</button>
     <button class="tab-btn" onclick="switchTab('tab-results', this)">🏆 Resultados</button>
+    <button class="tab-btn" onclick="switchTab('tab-profile', this)">🎾 Perfil</button>
   </nav>
 
+  <!-- CONTENEDOR DE AUTENTICACIÓN -->
+  <div id="auth-wrapper">
+    <div class="card">
+      <div style="display: flex; margin-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+        <button id="btn-show-login" class="auth-tab-btn active" onclick="switchAuthMode('login')">Iniciar Sesión</button>
+        <button id="btn-show-register" class="auth-tab-btn" onclick="switchAuthMode('register')">Registrarse</button>
+      </div>
+
+      <!-- FORMULARIO LOGIN -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email:</label>
+          <input type="email" id="login-email" required placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña:</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+
+      <!-- FORMULARIO REGISTRO -->
+      <form id="register-form" onsubmit="handleRegister(event)" style="display: none;">
+        <div class="form-group">
+          <label>Nombre / Alias *:</label>
+          <input type="text" id="reg-nombre" required placeholder="Ej. Carlos Pádel">
+        </div>
+        <div class="form-group">
+          <label>Email *:</label>
+          <input type="email" id="reg-email" required placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña *:</label>
+          <input type="password" id="reg-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn">Crear Cuenta</button>
+      </form>
+    </div>
+  </div>
+  
   <main>
     <!-- PESTAÑA 1: PARTICIPANTES -->
     <section id="tab-players" class="tab-content active">
@@ -293,6 +369,17 @@
         <div id="results-section" class="loading">Cargando historial...</div>
       </div>
     </section>
+
+    <!-- PESTAÑA 4: PERFIL -->
+    <section id="tab-profile" class="tab-content">
+      <div class="card" style="text-align: center;">
+        <h2>🎾 Mi Perfil de Jugador</h2>
+        <div id="profile-content">
+          <!-- Se renderiza dinámicamente con JS -->
+        </div>
+      </div>
+    </section>
+    
   </main>
 
   <footer>
@@ -554,6 +641,173 @@ function renderPlayers(players) {
     }
 
     document.addEventListener('DOMContentLoaded', loadAppData);
+
+    // --- LÓGICA DE AUTENTICACIÓN Y PERFIL ---
+    let currentUser = JSON.parse(localStorage.getItem('tps_current_user')) || null;
+
+    function checkAuth() {
+      const authWrapper = document.getElementById('auth-wrapper');
+      const mainNav = document.getElementById('main-nav');
+      const mainContent = document.querySelector('main');
+
+      if (!currentUser) {
+        authWrapper.style.display = 'block';
+        mainNav.style.display = 'none';
+        mainContent.style.display = 'none';
+      } else {
+        authWrapper.style.display = 'none';
+        mainNav.style.display = 'flex';
+        mainContent.style.display = 'block';
+        renderProfile();
+        loadAppData();
+      }
+    }
+
+    function switchAuthMode(mode) {
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const btnLogin = document.getElementById('btn-show-login');
+      const btnRegister = document.getElementById('btn-show-register');
+
+      if (mode === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        btnLogin.classList.add('active');
+        btnRegister.classList.remove('active');
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        btnRegister.classList.add('active');
+        btnLogin.classList.remove('active');
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value;
+
+      // Simulamos validación local (en el futuro conectado a Google Sheets)
+      let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
+      let found = users.find(u => u.email === email && u.password === pass);
+
+      // Si no existe en la BD local pero hay un usuario por defecto
+      if (!found && email === "demo@padel.com") {
+        found = { nombre: "Jugador Demo", email: "demo@padel.com", nivel: "Intermedio", mano: "Diestro", posicion: "Drive" };
+      }
+
+      if (found || users.length >= 0) {
+        // Si no está registrado en localStorage pero queremos permitir acceso rápido de prueba:
+        if (!found) {
+          found = { nombre: email.split('@')[0], email: email, nivel: "Intermedio", mano: "Diestro", posicion: "Drive" };
+        }
+        currentUser = found;
+        localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
+        alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
+        checkAuth();
+      } else {
+        alert('Credenciales incorrectas o usuario no registrado.');
+      }
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('reg-nombre').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
+      if (users.some(u => u.email === email)) {
+        alert('Este correo ya está registrado.');
+        return;
+      }
+
+      const newUser = {
+        id: 'USER_' + Date.now(),
+        nombre,
+        email,
+        password,
+        nivel: 'Intermedio',
+        mano: 'Diestro',
+        posicion: 'Drive'
+      };
+
+      users.push(newUser);
+      localStorage.setItem('tps_users_db', JSON.stringify(users));
+      
+      currentUser = newUser;
+      localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
+
+      alert('¡Cuenta creada con éxito!');
+      checkAuth();
+    }
+
+    function logout() {
+      localStorage.removeItem('tps_current_user');
+      currentUser = null;
+      checkAuth();
+    }
+
+    function renderProfile() {
+      if (!currentUser) return;
+      const container = document.getElementById('profile-content');
+      const iniciales = currentUser.nombre ? currentUser.nombre.substring(0, 2).toUpperCase() : 'TP';
+
+      container.innerHTML = `
+        <div class="profile-avatar">${iniciales}</div>
+        <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">${currentUser.nombre}</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">${currentUser.email}</p>
+        
+        <div style="text-align: left; margin-bottom: 16px;">
+          <div class="form-group">
+            <label>Nivel de Juego:</label>
+            <select id="profile-nivel" onchange="updateProfileField('nivel', this.value)">
+              <option value="Iniciación" ${currentUser.nivel === 'Iniciación' ? 'selected' : ''}>Iniciación</option>
+              <option value="Intermedio" ${currentUser.nivel === 'Intermedio' ? 'selected' : ''}>Intermedio</option>
+              <option value="Avanzado" ${currentUser.nivel === 'Avanzado' ? 'selected' : ''}>Avanzado</option>
+              <option value="Pro" ${currentUser.nivel === 'Pro' ? 'selected' : ''}>Pro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mano Hábil:</label>
+            <select id="profile-mano" onchange="updateProfileField('mano', this.value)">
+              <option value="Diestro" ${currentUser.mano === 'Diestro' ? 'selected' : ''}>Diestro</option>
+              <option value="Zurdo" ${currentUser.mano === 'Zurdo' ? 'selected' : ''}>Zurdo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Posición Preferida:</label>
+            <select id="profile-posicion" onchange="updateProfileField('posicion', this.value)">
+              <option value="Drive" ${currentUser.posicion === 'Drive' ? 'selected' : ''}>Drive</option>
+              <option value="Revés" ${currentUser.posicion === 'Revés' ? 'selected' : ''}>Revés</option>
+              <option value="Ambas" ${currentUser.posicion === 'Ambas' ? 'selected' : ''}>Ambas</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" style="background-color: #d93025; margin-top: 8px;" onclick="logout()">🔒 Cerrar Sesión</button>
+      `;
+    }
+
+    function updateProfileField(field, value) {
+      if (!currentUser) return;
+      currentUser[field] = value;
+      localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
+      
+      // Actualizar también en la base de datos local de usuarios
+      let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
+      let index = users.findIndex(u => u.email === currentUser.email);
+      if (index !== -1) {
+        users[index][field] = value;
+        localStorage.setItem('tps_users_db', JSON.stringify(users));
+      }
+    }
+
+    // Modificamos el evento DOMContentLoaded inicial para que ejecute primero checkAuth()
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+    });
+    
   </script>
 </body>
 </html>
