@@ -708,12 +708,16 @@
 
     function handleRegister(e) {
       e.preventDefault();
+      const nombre = document.getElementById('reg-nombre').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+
       const payload = {
         action: 'registerUser',
         id: 'USER_' + Date.now(),
-        nombre: document.getElementById('reg-nombre').value.trim(),
-        email: document.getElementById('reg-email').value.trim(),
-        password: document.getElementById('reg-password').value,
+        nombre: nombre,
+        email: email,
+        password: password,
         nivel: 'Intermedio',
         mano: 'Diestro',
         posicion: 'Drive'
@@ -726,17 +730,18 @@
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
+        // CAMBIO AQUÍ: Comprobamos tanto success como status === 'success'
+        if (data.success || data.status === 'success') {
           currentUser = {
             id: payload.id,
-            nombre: payload.nombre,
-            email: payload.email,
+            nombre: nombre,
+            email: email,
             nivel: payload.nivel,
             mano: payload.mano,
             posicion: payload.posicion
           };
           localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
-          alert('¡Cuenta creada con éxito!');
+          alert('¡Cuenta creada con éxito y guardada en Excel!');
           checkAuth();
         } else {
           alert(data.message || 'No se pudo completar el registro.');
