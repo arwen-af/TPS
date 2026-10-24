@@ -573,10 +573,11 @@
     function saveMatchResult(matchId, pareja1, pareja2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
-        const val1 = document.getElementById(`s${i}-p1-${matchId}`).value;
-        const val2 = document.getElementById(`s${i}-p2-${matchId}`).value;
-        if (val1 !== '' && val2 !== '') {
-          setsArray.push(`${val1}-${val2}`);
+        const val1 = document.getElementById(`s1-p1-${matchId}`).value; // o el índice correspondiente
+        const val1_loop = document.getElementById(`s${i}-p1-${matchId}`).value;
+        const val2_loop = document.getElementById(`s${i}-p2-${matchId}`).value;
+        if (val1_loop !== '' && val2_loop !== '') {
+          setsArray.push(`${val1_loop}-${val2_loop}`);
         }
       }
 
@@ -596,12 +597,15 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 👈 Clave para evitar bloqueo y leer JSON
         body: JSON.stringify(payload)
-      }).then(res => res.json()).then(() => {
+      })
+      .then(res => res.json())
+      .then(() => {
         alert('¡Resultado guardado correctamente!');
         setTimeout(loadAppData, 1000);
-      });
+      })
+      .catch(err => console.error('Error:', err));
     }
 
     function submitProposal(e) {
@@ -619,13 +623,16 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 👈 Clave para Apps Script
         body: JSON.stringify(payload)
-      }).then(res => res.json()).then(() => {
+      })
+      .then(res => res.json())
+      .then(() => {
         alert('¡Propuesta enviada con éxito!');
         document.getElementById('proposal-form').reset();
         setTimeout(loadAppData, 1000);
-      });
+      })
+      .catch(err => console.error('Error:', err));
     }
 
     // --- LÓGICA DE AUTENTICACIÓN Y PERFIL ---
@@ -699,32 +706,45 @@
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
 
-      let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
-      if (users.some(u => u.email === email)) {
-        alert('Este correo ya está registrado.');
-        return;
-      }
-
-      const newUser = {
+      const payload = {
+        action: 'registerUser',
         id: 'USER_' + Date.now(),
-        nombre,
-        email,
-        password,
+        nombre: nombre,
+        email: email,
+        password: password,
         nivel: 'Intermedio',
         mano: 'Diestro',
         posicion: 'Drive'
       };
 
-      users.push(newUser);
-      localStorage.setItem('tps_users_db', JSON.stringify(users));
-      
-      currentUser = newUser;
-      localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
-
-      alert('¡Cuenta creada con éxito!');
-      checkAuth();
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          currentUser = {
+            id: payload.id,
+            nombre: nombre,
+            email: email,
+            nivel: payload.nivel,
+            mano: payload.mano,
+            posicion: payload.posicion
+          };
+          localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
+          alert('¡Cuenta creada con éxito y guardada en Excel!');
+          checkAuth();
+        } else {
+          alert(data.message || 'No se pudo completar el registro.');
+        }
+      })
+      .catch(err => {
+        console.error('Error de registro:', err);
+        alert('Error al conectar con el servidor.');
+      });
     }
-
     function logout() {
       localStorage.removeItem('tps_current_user');
       currentUser = null;
