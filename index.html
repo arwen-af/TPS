@@ -257,7 +257,7 @@
 <body>
 
   <header>
-    <h1> Ranking Pádel TPS</h1>
+    <h1>🎾 Ranking Pádel TPS</h1>
     <p>Gestión y seguimiento de torneos</p>
   </header>
 
@@ -309,7 +309,7 @@
     </div>
   </div>
   
-  <main>
+  <main id="main-content" style="display: none;">
     <!-- PESTAÑA 1: PARTICIPANTES -->
     <section id="tab-players" class="tab-content active">
       <div class="card">
@@ -387,7 +387,7 @@
   </footer>
 
   <script>
-    // SUSTITUYE AQUÍ TU URL DE GOOGLE APPS SCRIPT
+    // URL DE GOOGLE APPS SCRIPT
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNzYttGHOGlq29ykSSe7mcJ-OcmE6FUnGmDLd2Tgue8kTzSuQKoVtwawEuj_E2Abd9LQ/exec";
 
     // Devuelve el valor exacto de la celda de Google Sheets
@@ -562,6 +562,7 @@
     function populateSelects(players) {
       const p1 = document.getElementById('p1-select');
       const p2 = document.getElementById('p2-select');
+      if (!p1 || !p2) return;
       p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
       p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
       players.forEach(p => {
@@ -573,7 +574,6 @@
     function saveMatchResult(matchId, pareja1, pareja2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
-        const val1 = document.getElementById(`s1-p1-${matchId}`).value; // o el índice correspondiente
         const val1_loop = document.getElementById(`s${i}-p1-${matchId}`).value;
         const val2_loop = document.getElementById(`s${i}-p2-${matchId}`).value;
         if (val1_loop !== '' && val2_loop !== '') {
@@ -597,7 +597,7 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 👈 Clave para evitar bloqueo y leer JSON
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
@@ -623,7 +623,7 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 👈 Clave para Apps Script
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
@@ -641,16 +641,16 @@
     function checkAuth() {
       const authWrapper = document.getElementById('auth-wrapper');
       const mainNav = document.getElementById('main-nav');
-      const mainContent = document.querySelector('main');
+      const mainContent = document.getElementById('main-content');
 
       if (!currentUser) {
-        authWrapper.style.display = 'block';
-        mainNav.style.display = 'none';
-        mainContent.style.display = 'none';
+        if(authWrapper) authWrapper.style.display = 'block';
+        if(mainNav) mainNav.style.display = 'none';
+        if(mainContent) mainContent.style.display = 'none';
       } else {
-        authWrapper.style.display = 'none';
-        mainNav.style.display = 'flex';
-        mainContent.style.display = 'block';
+        if(authWrapper) authWrapper.style.display = 'none';
+        if(mainNav) mainNav.style.display = 'flex';
+        if(mainContent) mainContent.style.display = 'block';
         renderProfile();
         loadAppData();
       }
@@ -749,6 +749,7 @@
         alert('Error al conectar con el servidor.');
       });
     }
+
     function logout() {
       localStorage.removeItem('tps_current_user');
       currentUser = null;
@@ -800,16 +801,23 @@
       if (!currentUser) return;
       currentUser[field] = value;
       localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
-      
-      let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
-      let index = users.findIndex(u => u.email === currentUser.email);
-      if (index !== -1) {
-        users[index][field] = value;
-        localStorage.setItem('tps_users_db', JSON.stringify(users));
-      }
+
+      const payload = {
+        action: 'updateProfile',
+        email: currentUser.email,
+        nivel: currentUser.nivel,
+        mano: currentUser.mano,
+        posicion: currentUser.posicion
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      }).catch(err => console.error('Error al actualizar perfil:', err));
     }
 
-    // Comprobación de estado inicial (SDD - Fase 1)
+    // Arranque inicial controlado por autenticación
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
     });
