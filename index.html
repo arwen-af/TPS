@@ -686,16 +686,16 @@
 
       const payload = { action: 'loginUser', email, password };
 
-      fetch(SCRIPT_URL, {
+      // Añadimos ?action=loginUser directamente a la URL para saltarnos cualquier bloqueo de POST
+      fetch(SCRIPT_URL + '?action=loginUser', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        // Blindaje: Acepta tanto success:true como status === 'success' o presencia de user
-        if (data.success || data.status === 'success' || data.user) {
-          currentUser = data.user || { email: email, nombre: 'Jugador', nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive' };
+        if (data.success) {
+          currentUser = data.user;
           localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
           alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
           checkAuth();
@@ -726,15 +726,15 @@
         posicion: 'Drive'
       };
 
-      fetch(SCRIPT_URL, {
+      // Añadimos ?action=registerUser directamente a la URL
+      fetch(SCRIPT_URL + '?action=registerUser', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        // Blindaje: Acepta tanto success:true como status === 'success'
-        if (data.success || data.status === 'success' || !data.message) {
+        if (data.success) {
           currentUser = {
             id: payload.id,
             nombre: nombre,
