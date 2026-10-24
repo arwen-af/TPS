@@ -204,6 +204,20 @@
       font-size: 0.85rem;
     }
 
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 auto 12px auto;
+    }
+
     footer {
       text-align: center;
       padding: 12px;
@@ -231,6 +245,7 @@
     <button class="tab-btn active" onclick="switchTab('tab-players', this)">👥 Participantes</button>
     <button class="tab-btn" onclick="switchTab('tab-agenda', this)">📅 Agenda</button>
     <button class="tab-btn" onclick="switchTab('tab-results', this)">🏆 Resultados</button>
+    <button class="tab-btn" onclick="switchTab('tab-profile', this)">🎾 Perfil</button>
   </nav>
 
   <main>
@@ -293,6 +308,44 @@
         <div id="results-section" class="loading">Cargando historial...</div>
       </div>
     </section>
+
+    <!-- PESTAÑA 4: PERFIL -->
+    <section id="tab-profile" class="tab-content">
+      <div class="card" style="text-align: center;">
+        <h2>🎾 Mi Perfil de Jugador</h2>
+        <div id="profile-content">
+          <div class="profile-avatar">TP</div>
+          <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">Jugador TPS</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Configuración de preferencias de juego</p>
+          <div style="text-align: left;">
+            <div class="form-group">
+              <label>Nivel de Juego:</label>
+              <select id="profile-nivel">
+                <option value="Iniciación">Iniciación</option>
+                <option value="Intermedio" selected>Intermedio</option>
+                <option value="Avanzado">Avanzado</option>
+                <option value="Pro">Pro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Mano Hábil:</label>
+              <select id="profile-mano">
+                <option value="Diestro" selected>Diestro</option>
+                <option value="Zurdo">Zurdo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Posición Preferida:</label>
+              <select id="profile-posicion">
+                <option value="Drive" selected>Drive</option>
+                <option value="Revés">Revés</option>
+                <option value="Ambas">Ambas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
@@ -301,18 +354,15 @@
 
   <script>
     // SUSTITUYE AQUÍ TU URL DE GOOGLE APPS SCRIPT
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQoUP-wKiwcv-GrkQ_ohyTQlOqXAl5sMFq4NLB16HaAeA2M3cRPsqKX9qxmn5matrdJg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNzYttGHOGlq29ykSSe7mcJ-OcmE6FUnGmDLd2Tgue8kTzSuQKoVtwawEuj_E2Abd9LQ/exec";
 
-    // Devuelve el valor exacto de la celda de Google Sheets
     function formatMatchDate(dateStr) {
       if (!dateStr || String(dateStr).trim() === '') return '';
       const str = String(dateStr).trim();
-      
       if (str.includes('T')) {
         const [datePart, timePart] = str.split('T');
         return `${datePart}, ${timePart.substring(0, 5)}`;
       }
-      
       return str; 
     }
 
@@ -350,12 +400,10 @@
       players.forEach(p => {
         const rawNivel = p.nivel ? String(p.nivel).trim() : '';
         const lowerNivel = rawNivel.toLowerCase();
-
         const esValido = rawNivel !== '' && 
                          lowerNivel !== 'undefined' && 
                          lowerNivel !== 'null' && 
                          lowerNivel !== 'intermedio';
-
         const nivelHtml = esValido ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${rawNivel})</span>` : '';
 
         html += `
@@ -475,6 +523,7 @@
     function populateSelects(players) {
       const p1 = document.getElementById('p1-select');
       const p2 = document.getElementById('p2-select');
+      if (!p1 || !p2) return;
       p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
       p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
       players.forEach(p => {
