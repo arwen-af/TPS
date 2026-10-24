@@ -684,15 +684,18 @@
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
 
+      const payload = { action: 'loginUser', email, password };
+
       fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'loginUser', email, password })
+        body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
-          currentUser = data.user;
+        // Aceptamos tanto success:true como status === 'success'
+        if (data.success || data.status === 'success') {
+          currentUser = data.user || { email: email, nombre: 'Jugador', nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive' };
           localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
           alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
           checkAuth();
@@ -730,7 +733,7 @@
       })
       .then(res => res.json())
       .then(data => {
-        // CAMBIO AQUÍ: Comprobamos tanto success como status === 'success'
+        // Aceptamos tanto success:true como status === 'success'
         if (data.success || data.status === 'success') {
           currentUser = {
             id: payload.id,
