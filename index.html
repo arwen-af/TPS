@@ -678,26 +678,30 @@
     function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
-      const pass = document.getElementById('login-password').value;
+      const password = document.getElementById('login-password').value;
 
-      let users = JSON.parse(localStorage.getItem('tps_users_db')) || [];
-      let found = users.find(u => u.email === email && u.password === pass);
+      const payload = { action: 'loginUser', email, password };
 
-      if (!found && email === "demo@padel.com") {
-        found = { nombre: "Jugador Demo", email: "demo@padel.com", nivel: "Intermedio", mano: "Diestro", posicion: "Drive" };
-      }
-
-      if (found || users.length >= 0) {
-        if (!found) {
-          found = { nombre: email.split('@')[0], email: email, nivel: "Intermedio", mano: "Diestro", posicion: "Drive" };
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          currentUser = data.user;
+          localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
+          alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
+          checkAuth();
+        } else {
+          alert(data.message || 'Credenciales incorrectas o usuario no registrado.');
         }
-        currentUser = found;
-        localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
-        alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
-        checkAuth();
-      } else {
-        alert('Credenciales incorrectas o usuario no registrado.');
-      }
+      })
+      .catch(err => {
+        console.error('Error de login:', err);
+        alert('Error al conectar con el servidor.');
+      });
     }
 
     function handleRegister(e) {
