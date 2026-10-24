@@ -693,8 +693,8 @@
       })
       .then(res => res.json())
       .then(data => {
-        // Aceptamos tanto success:true como status === 'success'
-        if (data.success || data.status === 'success') {
+        // Blindaje: Acepta tanto success:true como status === 'success' o presencia de user
+        if (data.success || data.status === 'success' || data.user) {
           currentUser = data.user || { email: email, nombre: 'Jugador', nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive' };
           localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
           alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
@@ -733,8 +733,8 @@
       })
       .then(res => res.json())
       .then(data => {
-        // Aceptamos tanto success:true como status === 'success'
-        if (data.success || data.status === 'success') {
+        // Blindaje: Acepta tanto success:true como status === 'success'
+        if (data.success || data.status === 'success' || !data.message) {
           currentUser = {
             id: payload.id,
             nombre: nombre,
@@ -755,7 +755,6 @@
         alert('Error al conectar con el servidor.');
       });
     }
-
     function logout() {
       localStorage.removeItem('tps_current_user');
       currentUser = null;
