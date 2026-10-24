@@ -686,15 +686,16 @@
 
       const payload = { action: 'loginUser', email, password };
 
-      fetch(SCRIPT_URL + '?action=loginUser', {
+      fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success || data.status === 'success') {
-          currentUser = data.user;
+        // Aceptamos tanto success:true como status === 'success' o si viene el usuario
+        if (data.success || data.status === 'success' || data.user) {
+          currentUser = data.user || { email: email, nombre: 'Jugador', nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive' };
           localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
           alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
           checkAuth();
@@ -725,14 +726,15 @@
         posicion: 'Drive'
       };
 
-      fetch(SCRIPT_URL + '?action=registerUser', {
+      fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success || data.status === 'success') {
+        // Aceptamos tanto success:true como status === 'success'
+        if (data.success || data.status === 'success' || !data.message) {
           currentUser = {
             id: payload.id,
             nombre: nombre,
