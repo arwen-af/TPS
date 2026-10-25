@@ -258,6 +258,21 @@
   <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+  <script>
+        // Extraemos la herramienta de Supabase
+        const { createClient } = supabase;
+
+        // Tus datos de conexión de Supabase (los pondremos aquí)
+        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+        const SUPABASE_ANON_KEY = 'tu-clave-anonima-aqui';
+
+        // Creamos el cliente
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Una prueba simple para ver en la consola del navegador que funciona
+        console.log("Supabase listo:", _supabase);
+        document.getElementById('status').innerText = "¡Conectado correctamente!";
+    </script>
 <body>
 
   <header>
