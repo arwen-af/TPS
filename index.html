@@ -595,6 +595,7 @@
         fecha: new Date().toLocaleDateString()
       };
 
+      // CORREGIDO: Se añade ?action=saveResult en la URL
       fetch(SCRIPT_URL + '?action=saveResult', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -624,6 +625,7 @@
         optC: document.getElementById('optC-input').value
       };
 
+      // CORREGIDO: Se añade ?action=addProposal en la URL
       fetch(SCRIPT_URL + '?action=addProposal', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -688,6 +690,7 @@
 
       const payload = { action: 'loginUser', email, password };
 
+      // CORREGIDO: Se añade ?action=loginUser en la URL
       fetch(SCRIPT_URL + '?action=loginUser', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -727,6 +730,7 @@
         posicion: 'Drive'
       };
 
+      // CORREGIDO: Se añade ?action=registerUser en la URL
       fetch(SCRIPT_URL + '?action=registerUser', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -816,6 +820,7 @@
         posicion: currentUser.posicion
       };
 
+      // CORREGIDO: Se añade ?action=updateProfile en la URL
       fetch(SCRIPT_URL + '?action=updateProfile', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
