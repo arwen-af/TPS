@@ -262,7 +262,7 @@
 
   <header>
     <h1>🎾 Ranking Pádel TPS</h1>
-    <p>Gestión y seguimiento de torneos (Supabase)</p>
+    <p>Gestión y seguimiento de torneos</p>
   </header>
 
   <!-- Navegación principal -->
@@ -301,12 +301,31 @@
           <input type="text" id="reg-nombre" required placeholder="Ej. Carlos Pádel">
         </div>
         <div class="form-group">
+          <label>Grupo/s *:</label>
+          <input type="text" id="reg-grupo" required placeholder="Ej. Grupo A / Mañanas">
+        </div>
+        <div class="form-group">
           <label>Email *:</label>
           <input type="email" id="reg-email" required placeholder="tu@email.com">
         </div>
         <div class="form-group">
           <label>Contraseña *:</label>
           <input type="password" id="reg-password" required placeholder="••••••••" minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Mano Hábil:</label>
+          <select id="reg-mano">
+            <option value="Diestro">Diestro</option>
+            <option value="Zurdo">Zurdo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Posición Preferida:</label>
+          <select id="reg-posicion">
+            <option value="Drive">Drive</option>
+            <option value="Revés">Revés</option>
+            <option value="Ambas">Ambas</option>
+          </select>
         </div>
         <button type="submit" class="btn">Crear Cuenta</button>
       </form>
@@ -385,7 +404,7 @@
   <script>
     // 1. CONFIGURACIÓN SUPABASE (Tus credenciales reales)
     const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Asegúrate de poner aquí tu clave anon de supabase que empieza por eyJ...
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Sustituye con tu clave anon real
     
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -421,8 +440,11 @@
     async function handleRegister(e) {
       e.preventDefault();
       const nombre = document.getElementById('reg-nombre').value.trim();
+      const grupo = document.getElementById('reg-grupo').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
+      const mano = document.getElementById('reg-mano').value;
+      const posicion = document.getElementById('reg-posicion').value;
 
       try {
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
@@ -431,7 +453,16 @@
         const userId = authData.user.id;
         const { error: profileError } = await _supabase
           .from('profiles')
-          .insert([{ id: userId, nombre: nombre, email: email, nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive', puntos: 0 }]);
+          .insert([{ 
+            id: userId, 
+            nombre: nombre, 
+            grupo: grupo, 
+            email: email, 
+            nivel: 'Intermedio', 
+            mano: mano, 
+            posicion: posicion, 
+            puntos: 0 
+          }]);
 
         if (profileError) throw profileError;
 
@@ -501,7 +532,7 @@
       data.forEach(p => {
         html += `
           <li class="player-item">
-            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${p.nivel || 'Intermedio'})</span></span>
+            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${p.grupo || 'General'})</span></span>
             <span class="badge">${p.puntos || 0} pts</span>
           </li>
         `;
@@ -558,7 +589,6 @@
         return;
       }
 
-      // Renderizar Agenda
       let htmlAgenda = '';
       let htmlActive = '';
 
@@ -571,7 +601,6 @@
           </div>
         `;
 
-        // Para registrar resultados
         htmlActive += `
           <div class="match-card">
             <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
@@ -631,7 +660,6 @@
 
       const resultadoStr = setsArray.join(', ');
       
-      // Guardar en historial de resultados
       const { error } = await _supabase.from('results').insert([{ p1, p2, set1: resultadoStr, fecha: new Date().toLocaleDateString() }]);
       
       if (error) {
@@ -639,7 +667,6 @@
         return;
       }
 
-      // Eliminar de propuestas activas
       await _supabase.from('proposals').delete().eq('id', matchId);
 
       alert('¡Resultado guardado correctamente!');
@@ -669,7 +696,7 @@
       container.innerHTML = html;
     }
 
-    // 6. GESTIÓN DE PERFIL
+    // 6. GESTIÓN DE PERFIL (Con Grupo, Mano y Posición)
     async function renderProfile() {
       const { data: { user } } = await _supabase.auth.getUser();
       if (!user) return;
@@ -686,6 +713,10 @@
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">${profile.email}</p>
         
         <div style="text-align: left; margin-bottom: 16px;">
+          <div class="form-group">
+            <label>Grupo/s:</label>
+            <input type="text" id="profile-grupo" value="${profile.grupo || ''}" onchange="updateProfileField('grupo', this.value)">
+          </div>
           <div class="form-group">
             <label>Nivel de Juego:</label>
             <select id="profile-nivel" onchange="updateProfileField('nivel', this.value)">
