@@ -218,7 +218,6 @@
       padding: 1.5rem;
       color: var(--text-muted);
     }
-
     /* Estilos adicionales para Autenticación y Perfil */
     #auth-wrapper {
       padding: 20px;
@@ -380,6 +379,7 @@
         </div>
       </div>
     </section>
+    
   </main>
 
   <footer>
@@ -473,7 +473,7 @@
         div.innerHTML = `
           <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club} ${p.pista ? '• ' + p.pista : ''}</p>
           <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-          <p style="font-size:0.80rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
+          <p style="font-size:0.8rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
         `;
         container.appendChild(div);
       });
@@ -571,8 +571,6 @@
       });
     }
 
-    // --- ACCIONES CONECTADAS CON ?action= EN LA URL ---
-
     function saveMatchResult(matchId, pareja1, pareja2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
@@ -607,7 +605,10 @@
         alert('¡Resultado guardado correctamente!');
         setTimeout(loadAppData, 1000);
       })
-      .catch(err => console.error('Error:', err));
+      .catch(err => {
+        console.error('Error:', err);
+        alert('Error al conectar con el servidor.');
+      });
     }
 
     function submitProposal(e) {
@@ -634,10 +635,13 @@
         document.getElementById('proposal-form').reset();
         setTimeout(loadAppData, 1000);
       })
-      .catch(err => console.error('Error:', err));
+      .catch(err => {
+        console.error('Error:', err);
+        alert('Error al conectar con el servidor.');
+      });
     }
 
-    // --- AUTENTICACIÓN Y PERFIL ---
+    // --- LÓGICA DE AUTENTICACIÓN Y PERFIL ---
     let currentUser = JSON.parse(localStorage.getItem('tps_current_user')) || null;
 
     function checkAuth() {
