@@ -696,9 +696,13 @@
 
     async function handleRegister(e) {
   e.preventDefault();
+  console.log("¡El formulario de registro ha interceptado el clic!"); // <-- Chivato de prueba
+
   const nombre = document.getElementById('reg-nombre').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
+
+  console.log("Datos capturados:", { nombre, email }); // <-- Ver qué datos lee
 
   if (!nombre || !email || !password) {
     alert('Por favor, rellena todos los campos obligatorios.');
@@ -718,11 +722,7 @@
       return;
     }
 
-    // Comprobar si el usuario fue creado correctamente
-    if (!authData.user) {
-      alert('No se pudo crear el usuario. Revisa la configuración de Auth en Supabase.');
-      return;
-    }
+    console.log("Usuario creado en Auth con éxito:", authData);
 
     const userId = authData.user.id;
 
@@ -748,7 +748,7 @@
     switchAuthMode('login');
 
   } catch (err) {
-    console.error('Error inesperado:', err);
+    console.error('Error inesperado en catch:', err);
     alert('Ocurrió un error inesperado al intentar registrarse.');
   }
 }
