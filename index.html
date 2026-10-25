@@ -695,41 +695,63 @@
     }
 
     async function handleRegister(e) {
-      e.preventDefault();
-      const nombre = document.getElementById('reg-nombre').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const password = document.getElementById('reg-password').value;
+  e.preventDefault();
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email,
-        password: password
-      });
+  if (!nombre || !email || !password) {
+    alert('Por favor, rellena todos los campos obligatorios.');
+    return;
+  }
 
-      if (authError) {
-        alert('Error al registrarse: ' + authError.message);
-        return;
-      }
+  try {
+    // 1. Registrar en Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: email,
+      password: password
+    });
 
-      const userId = authData.user.id;
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: userId,
-          nombre: nombre,
-          email: email,
-          nivel: 'Intermedio',
-          mano: 'Diestro',
-          posicion: 'Drive'
-        }]);
-
-      if (profileError) {
-        alert('Cuenta creada, pero hubo un error al guardar el perfil: ' + profileError.message);
-        return;
-      }
-
-      alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
-      switchAuthMode('login');
+    if (authError) {
+      console.error('Error Auth:', authError);
+      alert('Error en el registro: ' + authError.message);
+      return;
     }
+
+    // Comprobar si el usuario fue creado correctamente
+    if (!authData.user) {
+      alert('No se pudo crear el usuario. Revisa la configuración de Auth en Supabase.');
+      return;
+    }
+
+    const userId = authData.user.id;
+
+    // 2. Insertar perfil en la tabla 'profiles'
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([{
+        id: userId,
+        nombre: nombre,
+        email: email,
+        nivel: 'Intermedio',
+        mano: 'Diestro',
+        posicion: 'Drive'
+      }]);
+
+    if (profileError) {
+      console.error('Error Profile:', profileError);
+      alert('Usuario creado en Auth, pero falló al crear el perfil: ' + profileError.message);
+      return;
+    }
+
+    alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+    switchAuthMode('login');
+
+  } catch (err) {
+    console.error('Error inesperado:', err);
+    alert('Ocurrió un error inesperado al intentar registrarse.');
+  }
+}
 
     async function fetchUserProfileAndLogin(userId) {
       const { data, error } = await supabase
