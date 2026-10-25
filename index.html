@@ -387,16 +387,19 @@
   </footer>
 
   <script>
-    // URL DE GOOGLE APPS SCRIPT (Ya integrada correctamente)
-    const SCRIPT_URL = "hhttps://script.google.com/macros/s/AKfycbynAzTPKw-Pc_7DLqoKAD-uDWQDjKwbWwAG53qhXia93AdopcUKlD2GlmG_RbCMESUJXA/exec";
+    // URL DE GOOGLE APPS SCRIPT
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNzYttGHOGlq29ykSSe7mcJ-OcmE6FUnGmDLd2Tgue8kTzSuQKoVtwawEuj_E2Abd9LQ/exec";
 
+    // Devuelve el valor exacto de la celda de Google Sheets
     function formatMatchDate(dateStr) {
       if (!dateStr || String(dateStr).trim() === '') return '';
       const str = String(dateStr).trim();
+      
       if (str.includes('T')) {
         const [datePart, timePart] = str.split('T');
         return `${datePart}, ${timePart.substring(0, 5)}`;
       }
+      
       return str; 
     }
 
@@ -434,10 +437,12 @@
       players.forEach(p => {
         const rawNivel = p.nivel ? String(p.nivel).trim() : '';
         const lowerNivel = rawNivel.toLowerCase();
+
         const esValido = rawNivel !== '' && 
                          lowerNivel !== 'undefined' && 
                          lowerNivel !== 'null' && 
                          lowerNivel !== 'intermedio';
+
         const nivelHtml = esValido ? `<span style="font-size:0.8rem; color:var(--text-muted);">(${rawNivel})</span>` : '';
 
         html += `
@@ -468,7 +473,7 @@
         div.innerHTML = `
           <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club} ${p.pista ? '• ' + p.pista : ''}</p>
           <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-          <p style="font-size:0.8rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
+          <p style="font-size:0.80rem; color:var(--text-muted);">${rawFecha ? 'Fecha: ' + fechaMostrar : 'Propuesta: ' + fechaMostrar}</p>
         `;
         container.appendChild(div);
       });
@@ -566,13 +571,15 @@
       });
     }
 
+    // --- ACCIONES CONECTADAS CON ?action= EN LA URL ---
+
     function saveMatchResult(matchId, pareja1, pareja2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
-        const val1 = document.getElementById(`s${i}-p1-${matchId}`).value;
-        const val2 = document.getElementById(`s${i}-p2-${matchId}`).value;
-        if (val1 !== '' && val2 !== '') {
-          setsArray.push(`${val1}-${val2}`);
+        const val1_loop = document.getElementById(`s${i}-p1-${matchId}`).value;
+        const val2_loop = document.getElementById(`s${i}-p2-${matchId}`).value;
+        if (val1_loop !== '' && val2_loop !== '') {
+          setsArray.push(`${val1_loop}-${val2_loop}`);
         }
       }
 
@@ -590,7 +597,7 @@
         fecha: new Date().toLocaleDateString()
       };
 
-      fetch(SCRIPT_URL, {
+      fetch(SCRIPT_URL + '?action=saveResult', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
@@ -600,11 +607,7 @@
         alert('¡Resultado guardado correctamente!');
         setTimeout(loadAppData, 1000);
       })
-      .catch(err => {
-        console.error('Error:', err);
-        alert('¡Resultado guardado correctamente!');
-        setTimeout(loadAppData, 1000);
-      });
+      .catch(err => console.error('Error:', err));
     }
 
     function submitProposal(e) {
@@ -620,7 +623,7 @@
         optC: document.getElementById('optC-input').value
       };
 
-      fetch(SCRIPT_URL, {
+      fetch(SCRIPT_URL + '?action=addProposal', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
@@ -631,12 +634,7 @@
         document.getElementById('proposal-form').reset();
         setTimeout(loadAppData, 1000);
       })
-      .catch(err => {
-        console.error('Error:', err);
-        alert('¡Propuesta enviada con éxito!');
-        document.getElementById('proposal-form').reset();
-        setTimeout(loadAppData, 1000);
-      });
+      .catch(err => console.error('Error:', err));
     }
 
     // --- AUTENTICACIÓN Y PERFIL ---
@@ -686,16 +684,15 @@
 
       const payload = { action: 'loginUser', email, password };
 
-      fetch(SCRIPT_URL, {
+      fetch(SCRIPT_URL + '?action=loginUser', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        // Aceptamos tanto success:true como status === 'success' o si viene el usuario
-        if (data.success || data.status === 'success' || data.user) {
-          currentUser = data.user || { email: email, nombre: 'Jugador', nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive' };
+        if (data.success || data.user) {
+          currentUser = data.user;
           localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
           alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
           checkAuth();
@@ -726,15 +723,14 @@
         posicion: 'Drive'
       };
 
-      fetch(SCRIPT_URL, {
+      fetch(SCRIPT_URL + '?action=registerUser', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        // Aceptamos tanto success:true como status === 'success'
-        if (data.success || data.status === 'success' || !data.message) {
+        if (data.success || data.status === 'success') {
           currentUser = {
             id: payload.id,
             nombre: nombre,
@@ -755,6 +751,7 @@
         alert('Error al conectar con el servidor.');
       });
     }
+
     function logout() {
       localStorage.removeItem('tps_current_user');
       currentUser = null;
@@ -807,19 +804,22 @@
       currentUser[field] = value;
       localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
 
-      fetch(SCRIPT_URL, {
+      const payload = {
+        action: 'updateProfile',
+        email: currentUser.email,
+        nivel: currentUser.nivel,
+        mano: currentUser.mano,
+        posicion: currentUser.posicion
+      };
+
+      fetch(SCRIPT_URL + '?action=updateProfile', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'updateProfile',
-          email: currentUser.email,
-          nivel: currentUser.nivel,
-          mano: currentUser.mano,
-          posicion: currentUser.posicion
-        })
+        body: JSON.stringify(payload)
       }).catch(err => console.error('Error al actualizar perfil:', err));
     }
 
+    // Arranque inicial controlado por autenticación
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
     });
