@@ -1,326 +1,735 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranking de Pádel 🎾</title>
-    
-    <!-- Estilos generales adaptados a móvil y escritorio -->
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: #f4f6f8;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #1a73e8;
-            color: white;
-            padding: 15px 20px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .hidden { display: none !important; }
-        
-        /* Formularios */
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #5f6368;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #dadce0;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        button {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        button:hover { background-color: #1557b0; }
-        
-        /* Navegación por pestañas */
-        nav {
-            display: flex;
-            justify-content: space-around;
-            background: white;
-            border-bottom: 1px solid #dadce0;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-        }
-        nav button {
-            background: none;
-            color: #5f6368;
-            border: none;
-            font-size: 12px;
-            padding: 5px;
-            width: auto;
-            margin: 0;
-        }
-        nav button.active {
-            color: #1a73e8;
-            font-weight: bold;
-        }
-        .app-content {
-            padding-bottom: 70px; /* Espacio para la barra inferior */
-        }
-        .auth-switch {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #1a73e8;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking Pádel TPS</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #202124;
+      --text-muted: #5f6368;
+      --border-color: #dadce0;
+      --success: #34a853;
+      --radius: 12px;
+    }
 
-    <!-- Librería oficial de Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-style: normal !important;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 600px;
+      margin: 0 auto;
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    nav {
+      display: flex;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      background: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    main {
+      padding: 16px;
+      flex: 1;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      text-align: left;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background-color: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: var(--primary-hover); }
+
+    .player-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .player-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge {
+      background-color: #e8f0fe;
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .match-card {
+      background: #fafafa;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary);
+      text-align: left;
+    }
+
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .score-table th, .score-table td {
+      border: 1px solid var(--border-color);
+      padding: 4px 2px;
+    }
+
+    .score-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+
+    .score-input {
+      width: 32px;
+      text-align: center;
+      padding: 4px 2px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+    }
+
+    #auth-wrapper {
+      padding: 20px;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .auth-tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 auto 12px auto;
+    }
+    .hidden { display: none !important; }
+  </style>
+
+  <!-- Librería oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <header>Ranking de Pádel 🎾</header>
+  <header>
+    <h1>🎾 Ranking Pádel TPS</h1>
+    <p>Gestión y seguimiento de torneos (Supabase)</p>
+  </header>
 
-    <!-- PANTALLA DE AUTENTICACIÓN (LOGIN / REGISTRO) -->
-    <div id="auth-container" class="container">
-        <!-- FORMULARIO DE LOGIN -->
-        <div id="login-form-box">
-            <h2 style="color: #1a73e8; text-align: center;">Iniciar Sesión</h2>
-            <form id="form-login" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="login-email" required>
-                </div>
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit">Entrar</button>
-            </form>
-            <div class="auth-switch" onclick="switchAuthMode('register')">¿No tienes cuenta? Regístrate aquí</div>
-        </div>
+  <!-- Navegación principal -->
+  <nav id="main-nav" class="hidden">
+    <button class="tab-btn active" onclick="switchTab('tab-players', this)">👥 Participantes</button>
+    <button class="tab-btn" onclick="switchTab('tab-agenda', this)">📅 Agenda</button>
+    <button class="tab-btn" onclick="switchTab('tab-results', this)">🏆 Resultados</button>
+    <button class="tab-btn" onclick="switchTab('tab-profile', this)">🎾 Perfil</button>
+  </nav>
 
-        <!-- FORMULARIO DE REGISTRO -->
-        <div id="register-form-box" class="hidden">
-            <h2 style="color: #1a73e8; text-align: center;">Crear Cuenta</h2>
-            <form id="form-register" onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label>Nombre / Alias</label>
-                    <input type="text" id="reg-nombre" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="reg-email" required>
-                </div>
-                <div class="form-group">
-                    <label>Contraseña (mín. 6 caracteres)</label>
-                    <input type="password" id="reg-password" required minlength="6">
-                </div>
-                <button type="submit">Registrarse</button>
-            </form>
-            <div class="auth-switch" onclick="switchAuthMode('login')">¿Ya tienes cuenta? Inicia sesión</div>
+  <!-- CONTENEDOR DE AUTENTICACIÓN -->
+  <div id="auth-wrapper">
+    <div class="card">
+      <div style="display: flex; margin-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+        <button id="btn-show-login" class="auth-tab-btn active" onclick="switchAuthMode('login')">Iniciar Sesión</button>
+        <button id="btn-show-register" class="auth-tab-btn" onclick="switchAuthMode('register')">Registrarse</button>
+      </div>
+
+      <!-- FORMULARIO LOGIN -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email:</label>
+          <input type="email" id="login-email" required placeholder="tu@email.com">
         </div>
+        <div class="form-group">
+          <label>Contraseña:</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+
+      <!-- FORMULARIO REGISTRO -->
+      <form id="register-form" onsubmit="handleRegister(event)" class="hidden">
+        <div class="form-group">
+          <label>Nombre / Alias *:</label>
+          <input type="text" id="reg-nombre" required placeholder="Ej. Carlos Pádel">
+        </div>
+        <div class="form-group">
+          <label>Email *:</label>
+          <input type="email" id="reg-email" required placeholder="tu@email.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña *:</label>
+          <input type="password" id="reg-password" required placeholder="••••••••" minlength="6">
+        </div>
+        <button type="submit" class="btn">Crear Cuenta</button>
+      </form>
     </div>
+  </div>
+  
+  <!-- CONTENIDO PRINCIPAL DE LA APP -->
+  <main id="main-content" class="hidden">
+    <!-- PESTAÑA 1: PARTICIPANTES -->
+    <section id="tab-players" class="tab-content active">
+      <div class="card">
+        <h2>👥 Jugadores Registrados</h2>
+        <div id="players-section" class="loading">Cargando participantes...</div>
+      </div>
+    </section>
 
-    <!-- APLICACIÓN PRINCIPAL (OCULTA HASTA INICIAR SESIÓN) -->
-    <div id="app-container" class="container hidden app-content">
-        <!-- Pestaña 1: Participantes -->
-        <div id="tab-participantes" class="tab-pane">
-            <h3>👥 Participantes</h3>
-            <div id="participants-list">Cargando participantes...</div>
+    <!-- PESTAÑA 2: AGENDA -->
+    <section id="tab-agenda" class="tab-content">
+      <div class="card">
+        <h2>📅 Partidos Propuestos y Confirmados</h2>
+        <div id="proposals-list" class="loading">Cargando partidos...</div>
+      </div>
+
+      <div class="card">
+        <h2>➕ Proponer Nuevo Partido</h2>
+        <form id="proposal-form" onsubmit="submitProposal(event)">
+          <div class="form-group">
+            <label>Pareja 1:</label>
+            <select id="p1-select" required><option value="">Cargando...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Pareja 2:</label>
+            <select id="p2-select" required><option value="">Cargando...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Club / Ubicación:</label>
+            <input type="text" id="club-input" placeholder="Ej. Padel Club Moraleja" required>
+          </div>
+          <div class="form-group">
+            <label>Fecha y Hora:</label>
+            <input type="text" id="optA-input" placeholder="Ej. 2026-11-14, 18:00" required>
+          </div>
+          <button type="submit" class="btn">Enviar Propuesta</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 3: RESULTADOS -->
+    <section id="tab-results" class="tab-content">
+      <div class="card">
+        <h2>📝 Registrar Resultado (Hasta 5 Sets)</h2>
+        <div id="active-matches-container" class="loading">Cargando partidos...</div>
+      </div>
+
+      <div class="card">
+        <h2>🏆 Historial de Resultados</h2>
+        <div id="results-section" class="loading">Cargando historial...</div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 4: PERFIL -->
+    <section id="tab-profile" class="tab-content">
+      <div class="card" style="text-align: center;">
+        <h2>🎾 Mi Perfil de Jugador</h2>
+        <div id="profile-content">
+          Cargando perfil...
         </div>
+      </div>
+    </section>
+  </main>
 
-        <!-- Pestaña 2: Agenda -->
-        <div id="tab-agenda" class="tab-pane hidden">
-            <h3>📅 Agenda de Partidos</h3>
-            <p>Próximamente gestión de enfrentamientos.</p>
-        </div>
+  <footer>
+    TPS Padel Tracker • SDD Method & Supabase
+  </footer>
 
-        <!-- Pestaña 3: Resultados -->
-        <div id="tab-resultados" class="tab-pane hidden">
-            <h3>🏆 Resultados y Clasificación</h3>
-            <p>Próximamente tabla de puntos y sets.</p>
-        </div>
+  <script>
+    // 1. CONFIGURACIÓN SUPABASE (Tus credenciales reales)
+    const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Asegúrate de poner aquí tu clave anon de supabase que empieza por eyJ...
+    
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        <!-- Pestaña 4: Perfil -->
-        <div id="tab-perfil" class="tab-pane hidden">
-            <h3>🎾 Mi Perfil</h3>
-            <div id="profile-info">Cargando perfil...</div>
-            <button onclick="handleLogout()" style="background-color: #d93025; margin-top: 20px;">Cerrar Sesión</button>
-        </div>
-    </div>
+    // 2. CONTROL DE PESTAÑAS
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+    }
 
-    <!-- BARRA DE NAVEGACIÓN INFERIOR -->
-    <nav id="bottom-nav" class="hidden">
-        <button onclick="switchTab('participantes')" id="nav-participantes" class="active">👥 Participantes</button>
-        <button onclick="switchTab('agenda')" id="nav-agenda">📅 Agenda</button>
-        <button onclick="switchTab('resultados')" id="nav-resultados">🏆 Resultados</button>
-        <button onclick="switchTab('perfil')" id="nav-perfil">🎾 Perfil</button>
-    </nav>
+    // 3. AUTENTICACIÓN (LOGIN / REGISTRO)
+    function switchAuthMode(mode) {
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const btnLogin = document.getElementById('btn-show-login');
+      const btnRegister = document.getElementById('btn-show-register');
 
-    <!-- SCRIPT DE LÓGICA Y CONEXIÓN CON SUPABASE -->
-    <script>
-        // 1. Configuración de Supabase (Tus credenciales reales)
-        const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I';
+      if (mode === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        btnLogin.classList.add('active');
+        btnRegister.classList.remove('active');
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        btnRegister.classList.add('active');
+        btnLogin.classList.remove('active');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('reg-nombre').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      try {
+        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
+        if (authError) throw authError;
+
+        const userId = authData.user.id;
+        const { error: profileError } = await _supabase
+          .from('profiles')
+          .insert([{ id: userId, nombre: nombre, email: email, nivel: 'Intermedio', mano: 'Diestro', posicion: 'Drive', puntos: 0 }]);
+
+        if (profileError) throw profileError;
+
+        alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+        switchAuthMode('login');
+      } catch (err) {
+        alert('Error en el registro: ' + err.message);
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        checkUserSession();
+      } catch (err) {
+        alert('Error al entrar: ' + err.message);
+      }
+    }
+
+    async function logout() {
+      await _supabase.auth.signOut();
+      checkUserSession();
+    }
+
+    // 4. VALIDAR SESIÓN ACTIVA
+    async function checkUserSession() {
+      const { data: { session } } = await _supabase.auth.getSession();
+      const authWrapper = document.getElementById('auth-wrapper');
+      const mainNav = document.getElementById('main-nav');
+      const mainContent = document.getElementById('main-content');
+
+      if (session) {
+        authWrapper.classList.add('hidden');
+        mainNav.classList.remove('hidden');
+        mainContent.classList.remove('hidden');
+        loadAppData();
+        renderProfile();
+      } else {
+        authWrapper.classList.remove('hidden');
+        mainNav.classList.add('hidden');
+        mainContent.classList.add('hidden');
+      }
+    }
+
+    // 5. CARGAR DATOS DE LA APP DESDE SUPABASE
+    async function loadAppData() {
+      loadPlayers();
+      loadProposals();
+      loadResults();
+    }
+
+    async function loadPlayers() {
+      const container = document.getElementById('players-section');
+      const { data, error } = await _supabase.from('profiles').select('*');
+      
+      if (error || !data || data.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay jugadores registrados.</p>';
+        return;
+      }
+
+      let html = `<ul class="player-list">`;
+      data.forEach(p => {
+        html += `
+          <li class="player-item">
+            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${p.nivel || 'Intermedio'})</span></span>
+            <span class="badge">${p.puntos || 0} pts</span>
+          </li>
+        `;
+      });
+      html += `</ul>`;
+      container.innerHTML = html;
+      populateSelects(data);
+    }
+
+    function populateSelects(players) {
+      const p1 = document.getElementById('p1-select');
+      const p2 = document.getElementById('p2-select');
+      if (!p1 || !p2) return;
+      p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
+      p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
+      players.forEach(p => {
+        p1.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
+        p2.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
+      });
+    }
+
+    async function submitProposal(e) {
+      e.preventDefault();
+      const p1 = document.getElementById('p1-select').value;
+      const p2 = document.getElementById('p2-select').value;
+      const club = document.getElementById('club-input').value;
+      const optA = document.getElementById('optA-input').value;
+
+      if (p1 === p2) {
+        alert('Las parejas no pueden ser iguales.');
+        return;
+      }
+
+      const { error } = await _supabase.from('proposals').insert([{ p1, p2, club, optA, estado: 'pendiente' }]);
+
+      if (error) {
+        alert('Error al enviar propuesta: ' + error.message);
+      } else {
+        alert('¡Propuesta enviada con éxito!');
+        document.getElementById('proposal-form').reset();
+        loadProposals();
+      }
+    }
+
+    async function loadProposals() {
+      const container = document.getElementById('proposals-list');
+      const activeContainer = document.getElementById('active-matches-container');
+      
+      const { data, error } = await _supabase.from('proposals').select('*');
+
+      if (error || !data || data.length === 0) {
+        if(container) container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
+        if(activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles.</p>';
+        return;
+      }
+
+      // Renderizar Agenda
+      let htmlAgenda = '';
+      let htmlActive = '';
+
+      data.forEach(p => {
+        htmlAgenda += `
+          <div class="match-card">
+            <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club}</p>
+            <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Fecha: ${p.optA}</p>
+          </div>
+        `;
+
+        // Para registrar resultados
+        htmlActive += `
+          <div class="match-card">
+            <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
+              📍 ${p.club} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal;">(${p.optA})</span>
+            </p>
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Parejas</th>
+                  <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="text-align:left; font-weight:600;">${p.p1}</td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s4-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s5-p1-${p.id}" placeholder="0"></td>
+                </tr>
+                <tr>
+                  <td style="text-align:left; font-weight:600;">${p.p2}</td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s4-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s5-p2-${p.id}" placeholder="0"></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult('${p.id}', '${p.p1}', '${p.p2}')">
+              💾 Guardar y Finalizar Partido
+            </button>
+          </div>
+        `;
+      });
+
+      if(container) container.innerHTML = htmlAgenda;
+      if(activeContainer) activeContainer.innerHTML = htmlActive;
+    }
+
+    async function saveMatchResult(matchId, p1, p2) {
+      let setsArray = [];
+      for (let i = 1; i <= 5; i++) {
+        const v1 = document.getElementById(`s${i}-p1-${matchId}`).value;
+        const v2 = document.getElementById(`s${i}-p2-${matchId}`).value;
+        if (v1 !== '' && v2 !== '') {
+          setsArray.push(`${v1}-${v2}`);
+        }
+      }
+
+      if (setsArray.length === 0) {
+        alert('Introduce al menos el marcador del Set 1.');
+        return;
+      }
+
+      const resultadoStr = setsArray.join(', ');
+      
+      // Guardar en historial de resultados
+      const { error } = await _supabase.from('results').insert([{ p1, p2, set1: resultadoStr, fecha: new Date().toLocaleDateString() }]);
+      
+      if (error) {
+        alert('Error al guardar resultado: ' + error.message);
+        return;
+      }
+
+      // Eliminar de propuestas activas
+      await _supabase.from('proposals').delete().eq('id', matchId);
+
+      alert('¡Resultado guardado correctamente!');
+      loadProposals();
+      loadResults();
+    }
+
+    async function loadResults() {
+      const container = document.getElementById('results-section');
+      const { data, error } = await _supabase.from('results').select('*');
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos finalizados aún.</p>';
+        return;
+      }
+
+      let html = '';
+      data.forEach(r => {
+        html += `
+          <div class="match-card" style="border-left-color: var(--success);">
+            <p style="font-size:0.85rem;"><strong>${r.p1}</strong> vs <strong>${r.p2}</strong></p>
+            <p style="font-size:0.85rem; font-weight:bold; color:var(--primary); margin:4px 0;">Resultado: ${r.set1}</p>
+            <p style="font-size:0.75rem; color:var(--text-muted);">Jugado el: ${r.fecha}</p>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // 6. GESTIÓN DE PERFIL
+    async function renderProfile() {
+      const { data: { user } } = await _supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (!profile) return;
+
+      const container = document.getElementById('profile-content');
+      const iniciales = profile.nombre ? profile.nombre.substring(0, 2).toUpperCase() : 'TP';
+
+      container.innerHTML = `
+        <div class="profile-avatar">${iniciales}</div>
+        <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">${profile.nombre}</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">${profile.email}</p>
         
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        <div style="text-align: left; margin-bottom: 16px;">
+          <div class="form-group">
+            <label>Nivel de Juego:</label>
+            <select id="profile-nivel" onchange="updateProfileField('nivel', this.value)">
+              <option value="Iniciación" ${profile.nivel === 'Iniciación' ? 'selected' : ''}>Iniciación</option>
+              <option value="Intermedio" ${profile.nivel === 'Intermedio' ? 'selected' : ''}>Intermedio</option>
+              <option value="Avanzado" ${profile.nivel === 'Avanzado' ? 'selected' : ''}>Avanzado</option>
+              <option value="Pro" ${profile.nivel === 'Pro' ? 'selected' : ''}>Pro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mano Hábil:</label>
+            <select id="profile-mano" onchange="updateProfileField('mano', this.value)">
+              <option value="Diestro" ${profile.mano === 'Diestro' ? 'selected' : ''}>Diestro</option>
+              <option value="Zurdo" ${profile.mano === 'Zurdo' ? 'selected' : ''}>Zurdo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Posición Preferida:</label>
+            <select id="profile-posicion" onchange="updateProfileField('posicion', this.value)">
+              <option value="Drive" ${profile.posicion === 'Drive' ? 'selected' : ''}>Drive</option>
+              <option value="Revés" ${profile.posicion === 'Revés' ? 'selected' : ''}>Revés</option>
+              <option value="Ambas" ${profile.posicion === 'Ambas' ? 'selected' : ''}>Ambas</option>
+            </select>
+          </div>
+        </div>
 
-        // 2. Control de Vistas Auth
-        function switchAuthMode(mode) {
-            if (mode === 'register') {
-                document.getElementById('login-form-box').classList.add('hidden');
-                document.getElementById('register-form-box').classList.remove('hidden');
-            } else {
-                document.getElementById('register-form-box').classList.add('hidden');
-                document.getElementById('login-form-box').classList.remove('hidden');
-            }
-        }
+        <button class="btn" style="background-color: #d93025; margin-top: 8px;" onclick="logout()">🔒 Cerrar Sesión</button>
+      `;
+    }
 
-        // 3. Control de Pestañas de la App
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+    async function updateProfileField(field, value) {
+      const { data: { user } } = await _supabase.auth.getUser();
+      if (!user) return;
 
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            document.getElementById(`nav-${tabName}`).classList.add('active');
+      const updateData = {};
+      updateData[field] = value;
 
-            if (tabName === 'participantes') loadParticipants();
-            if (tabName === 'perfil') loadProfile();
-        }
+      await _supabase.from('profiles').update(updateData).eq('id', user.id);
+    }
 
-        // 4. Registro de Usuario + Perfil
-        async function handleRegister(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('reg-nombre').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
-
-            try {
-                const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
-                if (authError) throw authError;
-
-                const userId = authData.user.id;
-                const { error: profileError } = await _supabase
-                    .from('profiles')
-                    .insert([{ id: userId, nombre: nombre, email: email }]);
-
-                if (profileError) throw profileError;
-
-                alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
-                switchAuthMode('login');
-            } catch (err) {
-                alert('Error en el registro: ' + err.message);
-                console.error(err);
-            }
-        }
-
-        // 5. Inicio de Sesión
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-
-            try {
-                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-
-                checkUserSession();
-            } catch (err) {
-                alert('Error al entrar: ' + err.message);
-            }
-        }
-
-        // 6. Cerrar Sesión
-        async function handleLogout() {
-            await _supabase.auth.signOut();
-            checkUserSession();
-        }
-
-        // 7. Validar Sesión Activa
-        async function checkUserSession() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                document.getElementById('auth-container').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('bottom-nav').classList.remove('hidden');
-                switchTab('participantes');
-            } else {
-                document.getElementById('auth-container').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('hidden');
-                document.getElementById('bottom-nav').classList.add('hidden');
-            }
-        }
-
-        // 8. Cargar Perfil
-        async function loadProfile() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) return;
-
-            const { data: profile } = await _supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            if (profile) {
-                document.getElementById('profile-info').innerHTML = `
-                    <p><strong>Nombre:</strong> ${profile.nombre}</p>
-                    <p><strong>Email:</strong> ${profile.email}</p>
-                    <p><strong>Nivel:</strong> ${profile.nivel || 'Intermedio'}</p>
-                `;
-            }
-        }
-
-        // 9. Cargar Participantes
-        async function loadParticipants() {
-            const { data, error } = await _supabase.from('profiles').select('*');
-            if (error) {
-                document.getElementById('participants-list').innerText = "Error al cargar participantes.";
-                return;
-            }
-
-            let html = '<ul style="padding-left: 20px;">';
-            data.forEach(p => {
-                html += `<li><strong>${p.nombre}</strong> (${p.nivel || 'Jugador/a'})</li>`;
-            });
-            html += '</ul>';
-            document.getElementById('participants-list').innerHTML = html;
-        }
-
-        // Comprobar estado al cargar la página
-        window.onload = () => {
-            checkUserSession();
-        };
-    </script>
+    // Arranque inicial
+    document.addEventListener('DOMContentLoaded', () => {
+      checkUserSession();
+    });
+  </script>
 </body>
 </html>
