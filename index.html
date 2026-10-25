@@ -176,7 +176,6 @@
       text-align: left;
     }
 
-    /* Tabla interactiva para hasta 5 Sets */
     .score-table {
       width: 100%;
       border-collapse: collapse;
@@ -218,12 +217,13 @@
       padding: 1.5rem;
       color: var(--text-muted);
     }
-    /* Estilos adicionales para Autenticación y Perfil */
+
     #auth-wrapper {
       padding: 20px;
       max-width: 400px;
       margin: 20px auto;
     }
+
     .auth-tab-btn {
       flex: 1;
       padding: 10px;
@@ -235,10 +235,12 @@
       cursor: pointer;
       border-bottom: 2px solid transparent;
     }
+
     .auth-tab-btn.active {
       color: var(--primary);
       border-bottom-color: var(--primary);
     }
+
     .profile-avatar {
       width: 64px;
       height: 64px;
@@ -254,7 +256,7 @@
     }
   </style>
   <!-- SDK de Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -263,7 +265,7 @@
     <p>Gestión y seguimiento de torneos</p>
   </header>
 
-  <!-- La navegación principal solo se muestra si el usuario ha iniciado sesión -->
+  <!-- Navegación principal -->
   <nav id="main-nav" style="display: none;">
     <button class="tab-btn active" onclick="switchTab('tab-players', this)">👥 Participantes</button>
     <button class="tab-btn" onclick="switchTab('tab-agenda', this)">📅 Agenda</button>
@@ -359,7 +361,7 @@
       </div>
     </section>
 
-    <!-- PESTAÑA 3: RESULTADOS (HASTA 5 SETS) -->
+    <!-- PESTAÑA 3: RESULTADOS -->
     <section id="tab-results" class="tab-content">
       <div class="card">
         <h2>📝 Registrar Resultado (Hasta 5 Sets)</h2>
@@ -377,11 +379,10 @@
       <div class="card" style="text-align: center;">
         <h2>🎾 Mi Perfil de Jugador</h2>
         <div id="profile-content">
-          <!-- Se renderiza dinámicamente con JS -->
+          <!-- Render dinámico con JS -->
         </div>
       </div>
     </section>
-    
   </main>
 
   <footer>
@@ -389,21 +390,20 @@
   </footer>
 
   <script>
-    // Credenciales de Supabase
-const SUPABASE_URL = "TU_SUPABASE_URL_AQUI"; // Ej: https://xxxxxx.supabase.co
-const SUPABASE_ANON_KEY = "TU_SUPABASE_ANON_KEY_AQUI";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Devuelve el valor exacto de la celda de Google Sheets
+    // --- CREDENCIALES DE SUPABASE ---
+    const SUPABASE_URL = "TU_SUPABASE_URL_AQUI"; // Reemplazar por tu URL de Supabase
+    const SUPABASE_ANON_KEY = "TU_SUPABASE_ANON_KEY_AQUI"; // Reemplazar por tu anon key
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = JSON.parse(localStorage.getItem('tps_current_user')) || null;
+
     function formatMatchDate(dateStr) {
       if (!dateStr || String(dateStr).trim() === '') return '';
       const str = String(dateStr).trim();
-      
       if (str.includes('T')) {
         const [datePart, timePart] = str.split('T');
         return `${datePart}, ${timePart.substring(0, 5)}`;
       }
-      
       return str; 
     }
 
@@ -414,20 +414,30 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       btnElement.classList.add('active');
     }
 
-    function loadAppData() {
-      fetch(SCRIPT_URL + '?action=getData')
-        .then(res => res.json())
-        .then(data => {
-          renderPlayers(data.players);
-          renderProposals(data.proposals);
-          renderActiveMatches(data.proposals);
-          renderResults(data.results);
-          populateSelects(data.players);
-        })
-        .catch(err => {
-          console.error('Error de conexión:', err);
-          document.querySelectorAll('.loading').forEach(el => el.textContent = 'Error de conexión.');
-        });
+    // --- CARGA DE DATOS DESDE SUPABASE ---
+    async function loadAppData() {
+      try {
+        // Cargar perfiles
+        const { data: profiles, error: pErr } = await supabase.from('profiles').select('*');
+        if (pErr) throw pErr;
+
+        // Cargar propuestas
+        const { data: proposals, error: propErr } = await supabase.from('proposals').select('*');
+        if (propErr) throw propErr;
+
+        // Cargar resultados
+        const { data: results, error: rErr } = await supabase.from('results').select('*');
+        if (rErr) throw rErr;
+
+        renderPlayers(profiles);
+        renderProposals(proposals);
+        renderActiveMatches(proposals);
+        renderResults(results);
+        populateSelects(profiles);
+      } catch (err) {
+        console.error('Error al cargar datos desde Supabase:', err);
+        document.querySelectorAll('.loading').forEach(el => el.textContent = 'Error de conexión con Supabase.');
+      }
     }
 
     function renderPlayers(players) {
@@ -452,7 +462,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         html += `
           <li class="player-item">
             <span><strong>${p.nombre}</strong> ${nivelHtml}</span>
-            <span class="badge">${p.puntos} pts</span>
+            <span class="badge">${p.puntos || 0} pts</span>
           </li>
         `;
       });
@@ -470,7 +480,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       container.innerHTML = '';
       proposals.forEach(p => {
         const rawFecha = p.confirmada;
-        const fechaMostrar = rawFecha ? formatMatchDate(rawFecha) : formatMatchDate(p.optA);
+        const fechaMostrar = rawFecha ? formatMatchDate(rawFecha) : formatMatchDate(p.opt_a);
 
         const div = document.createElement('div');
         div.className = 'match-card';
@@ -494,7 +504,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       container.innerHTML = '';
 
       proposals.forEach(match => {
-        const rawFecha = match.confirmada || match.optA || '';
+        const rawFecha = match.confirmada || match.opt_a || '';
         const fechaTxt = rawFecha ? formatMatchDate(rawFecha) : 'Pendiente de fecha';
         const pistaTxt = match.pista ? ` • Pista: ${match.pista}` : '';
 
@@ -575,7 +585,8 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       });
     }
 
-    function saveMatchResult(matchId, pareja1, pareja2) {
+    // --- ACCIONES CON SUPABASE ---
+    async function saveMatchResult(matchId, pareja1, pareja2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
         const val1_loop = document.getElementById(`s${i}-p1-${matchId}`).value;
@@ -590,60 +601,44 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         return;
       }
 
-      const payload = {
-        action: 'saveResult',
-        id: matchId,
+      const { error } = await supabase.from('results').insert([{
+        id: 'RES_' + Date.now(),
         p1: pareja1,
         p2: pareja2,
         set1: setsArray.join(', '),
         fecha: new Date().toLocaleDateString()
-      };
+      }]);
 
-      // CORREGIDO: URL con parámetro de acción
-      fetch(SCRIPT_URL + '?action=saveResult', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(() => {
+      if (error) {
+        alert('Error al guardar resultado: ' + error.message);
+      } else {
         alert('¡Resultado guardado correctamente!');
-        setTimeout(loadAppData, 1000);
-      })
-      .catch(err => console.error('Error:', err));
+        loadAppData();
+      }
     }
 
-    function submitProposal(e) {
+    async function submitProposal(e) {
       e.preventDefault();
-      const payload = {
-        action: 'addProposal',
+      const { error } = await supabase.from('proposals').insert([{
         id: 'PROP_' + Date.now(),
         p1: document.getElementById('p1-select').value,
         p2: document.getElementById('p2-select').value,
         club: document.getElementById('club-input').value,
-        optA: document.getElementById('optA-input').value,
-        optB: document.getElementById('optB-input').value,
-        optC: document.getElementById('optC-input').value
-      };
+        opt_a: document.getElementById('optA-input').value,
+        opt_b: document.getElementById('optB-input').value,
+        opt_c: document.getElementById('optC-input').value
+      }]);
 
-      // CORREGIDO: URL con parámetro de acción
-      fetch(SCRIPT_URL + '?action=addProposal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(() => {
+      if (error) {
+        alert('Error al enviar propuesta: ' + error.message);
+      } else {
         alert('¡Propuesta enviada con éxito!');
         document.getElementById('proposal-form').reset();
-        setTimeout(loadAppData, 1000);
-      })
-      .catch(err => console.error('Error:', err));
+        loadAppData();
+      }
     }
 
-    // --- LÓGICA DE AUTENTICACIÓN Y PERFIL ---
-    let currentUser = JSON.parse(localStorage.getItem('tps_current_user')) || null;
-
+    // --- AUTENTICACIÓN Y PERFIL ---
     function checkAuth() {
       const authWrapper = document.getElementById('auth-wrapper');
       const mainNav = document.getElementById('main-nav');
@@ -682,86 +677,84 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
     async function handleLogin(e) {
-  e.preventDefault();
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
 
-  if (error) {
-    alert('Email o contraseña incorrectos.');
-    return;
-  }
+      if (error) {
+        alert('Email o contraseña incorrectos.');
+        return;
+      }
 
-  // Cargar datos del usuario y entrar a la app
-  fetchUserProfileAndLogin(data.user.id);
-}
+      fetchUserProfileAndLogin(data.user.id);
+    }
 
     async function handleRegister(e) {
-  e.preventDefault();
-  const nombre = document.getElementById('reg-nombre').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
+      e.preventDefault();
+      const nombre = document.getElementById('reg-nombre').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
 
-  // 1. Registrar en Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: email,
-    password: password
-  });
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: password
+      });
 
-  if (authError) {
-    alert('Error al registrarse: ' + authError.message);
-    return;
-  }
+      if (authError) {
+        alert('Error al registrarse: ' + authError.message);
+        return;
+      }
 
-  // 2. Guardar el perfil complementario en la tabla 'profiles'
-  const userId = authData.user.id;
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert([{
-      id: userId,
-      nombre: nombre,
-      email: email,
-      nivel: 'Intermedio',
-      mano: 'Diestro',
-      posicion: 'Drive'
-    }]);
+      const userId = authData.user.id;
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          id: userId,
+          nombre: nombre,
+          email: email,
+          nivel: 'Intermedio',
+          mano: 'Diestro',
+          posicion: 'Drive'
+        }]);
 
-  if (profileError) {
-    alert('Cuenta creada, pero hubo un error al guardar el perfil: ' + profileError.message);
-    return;
-  }
+      if (profileError) {
+        alert('Cuenta creada, pero hubo un error al guardar el perfil: ' + profileError.message);
+        return;
+      }
 
-  alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
-  switchAuthMode('login');
-}
+      alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+      switchAuthMode('login');
+    }
+
     async function fetchUserProfileAndLogin(userId) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-  if (error) {
-    console.error('Error al obtener perfil:', error);
-    return;
-  }
+      if (error) {
+        console.error('Error al obtener perfil:', error);
+        return;
+      }
 
-  currentUser = data;
-  localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
-  alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
-  checkAuth();
-}
+      currentUser = data;
+      localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
+      alert('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
+      checkAuth();
+    }
 
-async function logout() {
-  await supabase.auth.signOut();
-  localStorage.removeItem('tps_current_user');
-  currentUser = null;
-  checkAuth();
-}
+    async function logout() {
+      await supabase.auth.signOut();
+      localStorage.removeItem('tps_current_user');
+      currentUser = null;
+      checkAuth();
+    }
 
     function renderProfile() {
       if (!currentUser) return;
@@ -804,28 +797,24 @@ async function logout() {
       `;
     }
 
-    function updateProfileField(field, value) {
+    async function updateProfileField(field, value) {
       if (!currentUser) return;
       currentUser[field] = value;
       localStorage.setItem('tps_current_user', JSON.stringify(currentUser));
 
-      const payload = {
-        action: 'updateProfile',
-        email: currentUser.email,
-        nivel: currentUser.nivel,
-        mano: currentUser.mano,
-        posicion: currentUser.posicion
-      };
+      const updates = {};
+      updates[field] = value;
 
-      // CORREGIDO: URL con parámetro de acción
-      fetch(SCRIPT_URL + '?action=updateProfile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      }).catch(err => console.error('Error al actualizar perfil:', err));
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', currentUser.id);
+
+      if (error) {
+        console.error('Error al actualizar perfil en Supabase:', error);
+      }
     }
 
-    // Arranque inicial controlado por autenticación
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
     });
