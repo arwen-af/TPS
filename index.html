@@ -447,10 +447,18 @@
       const posicion = document.getElementById('reg-posicion').value;
 
       try {
+        // 1. Crear usuario en la autenticación de Supabase
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
         if (authError) throw authError;
 
+        if (!authData.user) {
+          alert('Revisa tu correo para confirmar la cuenta.');
+          return;
+        }
+
         const userId = authData.user.id;
+
+        // 2. Insertar los detalles en la tabla 'profiles'
         const { error: profileError } = await _supabase
           .from('profiles')
           .insert([{ 
@@ -464,12 +472,18 @@
             puntos: 0 
           }]);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          // Si falla la tabla profiles, cerramos la sesión para evitar estados incoherentes
+          await _supabase.auth.signOut();
+          throw new Error("Error guardando el perfil: " + profileError.message);
+        }
 
-        alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+        alert('¡Cuenta y perfil creados con éxito! Ya puedes iniciar sesión.');
         switchAuthMode('login');
+
       } catch (err) {
-        alert('Error en el registro: ' + err.message);
+        alert('No se pudo completar el registro:\n' + err.message);
+        console.error("Detalle del error:", err);
       }
     }
 
