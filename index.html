@@ -294,7 +294,7 @@
         <button type="submit" class="btn">Entrar</button>
       </form>
 
-      <!-- FORMULARIO REGISTRO (Sin campo Grupo) -->
+      <!-- FORMULARIO REGISTRO -->
       <form id="register-form" onsubmit="handleRegister(event)" class="hidden">
         <div class="form-group">
           <label>Nombre / Alias *:</label>
@@ -398,7 +398,7 @@
   </footer>
 
   <script>
-    // 1. CONFIGURACIÓN SUPABASE (Asegúrate de tener tu clave anon/public de Supabase aquí)
+    // 1. CONFIGURACIÓN SUPABASE
     const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Pega tu clave JWT real
     
@@ -446,20 +446,20 @@
         if (authError) throw authError;
 
         if (!authData.user) {
-          alert('Revisa tu correo para confirmar la cuenta si requiere verificación.');
+          alert('Revisa tu correo para confirmar la cuenta.');
           return;
         }
 
         const userId = authData.user.id;
 
-        // Inserción inicial en 'profiles' (Sin campo grupo, queda vacío o null por defecto)
+        // Inserción limpia utilizando group_id
         const { error: profileError } = await _supabase
           .from('profiles')
           .insert([{ 
             id: userId, 
             nombre: nombre, 
             email: email, 
-            grupo: '', 
+            group_id: '', 
             nivel: 'Intermedio', 
             mano: mano, 
             posicion: posicion, 
@@ -537,7 +537,7 @@
 
       let html = `<ul class="player-list">`;
       data.forEach(p => {
-        const grupoTexto = p.grupo && p.grupo.trim() !== '' ? ` (${p.grupo})` : '';
+        const grupoTexto = p.group_id && p.group_id.trim() !== '' ? ` (${p.group_id})` : '';
         html += `
           <li class="player-item">
             <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">${grupoTexto}</span></span>
@@ -704,7 +704,7 @@
       container.innerHTML = html;
     }
 
-    // 6. GESTIÓN DE PERFIL (Edición opcional de Grupo)
+    // 6. GESTIÓN DE PERFIL (Actualizando group_id)
     async function renderProfile() {
       const { data: { user } } = await _supabase.auth.getUser();
       if (!user) return;
@@ -722,8 +722,8 @@
         
         <div style="text-align: left; margin-bottom: 16px;">
           <div class="form-group">
-            <label>Grupo/s (Opcional):</label>
-            <input type="text" id="profile-grupo" value="${profile.grupo || ''}" placeholder="Ej. Grupo A / Mañanas" onchange="updateProfileField('grupo', this.value)">
+            <label>Grupo / ID de Grupo:</label>
+            <input type="text" id="profile-grupo" value="${profile.group_id || ''}" placeholder="Ej. Grupo 12" onchange="updateProfileField('group_id', this.value)">
           </div>
           <div class="form-group">
             <label>Nivel de Juego:</label>
@@ -766,7 +766,7 @@
       if (error) {
         alert('Error al actualizar el campo: ' + error.message);
       } else {
-        loadPlayers(); // Recarga la lista de jugadores para actualizar el grupo visualmente
+        loadPlayers();
       }
     }
 
