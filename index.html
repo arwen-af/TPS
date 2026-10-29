@@ -294,15 +294,11 @@
         <button type="submit" class="btn">Entrar</button>
       </form>
 
-      <!-- FORMULARIO REGISTRO -->
+      <!-- FORMULARIO REGISTRO (Sin campo Grupo) -->
       <form id="register-form" onsubmit="handleRegister(event)" class="hidden">
         <div class="form-group">
           <label>Nombre / Alias *:</label>
           <input type="text" id="reg-nombre" required placeholder="Ej. Carlos Pádel">
-        </div>
-        <div class="form-group">
-          <label>Grupo/s *:</label>
-          <input type="text" id="reg-grupo" required placeholder="Ej. Grupo A / Mañanas">
         </div>
         <div class="form-group">
           <label>Email *:</label>
@@ -402,9 +398,9 @@
   </footer>
 
   <script>
-    // 1. CONFIGURACIÓN SUPABASE (Tus credenciales reales)
+    // 1. CONFIGURACIÓN SUPABASE (Asegúrate de tener tu clave anon/public de Supabase aquí)
     const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Sustituye con tu clave anon real
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Pega tu clave JWT real
     
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -417,7 +413,7 @@
       btnElement.classList.add('active');
     }
 
-    // 3. AUTENTICACIÓN (LOGIN / REGISTRO)
+    // 3. AUTENTICACIÓN
     function switchAuthMode(mode) {
       const loginForm = document.getElementById('login-form');
       const registerForm = document.getElementById('register-form');
@@ -440,32 +436,30 @@
     async function handleRegister(e) {
       e.preventDefault();
       const nombre = document.getElementById('reg-nombre').value.trim();
-      const grupo = document.getElementById('reg-grupo').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
       const mano = document.getElementById('reg-mano').value;
       const posicion = document.getElementById('reg-posicion').value;
 
       try {
-        // 1. Crear usuario en la autenticación de Supabase
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
         if (authError) throw authError;
 
         if (!authData.user) {
-          alert('Revisa tu correo para confirmar la cuenta.');
+          alert('Revisa tu correo para confirmar la cuenta si requiere verificación.');
           return;
         }
 
         const userId = authData.user.id;
 
-        // 2. Insertar los detalles en la tabla 'profiles'
+        // Inserción inicial en 'profiles' (Sin campo grupo, queda vacío o null por defecto)
         const { error: profileError } = await _supabase
           .from('profiles')
           .insert([{ 
             id: userId, 
             nombre: nombre, 
-            grupo: grupo, 
             email: email, 
+            grupo: '', 
             nivel: 'Intermedio', 
             mano: mano, 
             posicion: posicion, 
@@ -473,12 +467,11 @@
           }]);
 
         if (profileError) {
-          // Si falla la tabla profiles, cerramos la sesión para evitar estados incoherentes
           await _supabase.auth.signOut();
           throw new Error("Error guardando el perfil: " + profileError.message);
         }
 
-        alert('¡Cuenta y perfil creados con éxito! Ya puedes iniciar sesión.');
+        alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
         switchAuthMode('login');
 
       } catch (err) {
@@ -526,7 +519,7 @@
       }
     }
 
-    // 5. CARGAR DATOS DE LA APP DESDE SUPABASE
+    // 5. CARGAR DATOS DE LA APP
     async function loadAppData() {
       loadPlayers();
       loadProposals();
@@ -544,9 +537,10 @@
 
       let html = `<ul class="player-list">`;
       data.forEach(p => {
+        const grupoTexto = p.grupo && p.grupo.trim() !== '' ? ` (${p.grupo})` : '';
         html += `
           <li class="player-item">
-            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${p.grupo || 'General'})</span></span>
+            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">${grupoTexto}</span></span>
             <span class="badge">${p.puntos || 0} pts</span>
           </li>
         `;
@@ -710,7 +704,7 @@
       container.innerHTML = html;
     }
 
-    // 6. GESTIÓN DE PERFIL (Con Grupo, Mano y Posición)
+    // 6. GESTIÓN DE PERFIL (Edición opcional de Grupo)
     async function renderProfile() {
       const { data: { user } } = await _supabase.auth.getUser();
       if (!user) return;
@@ -728,8 +722,8 @@
         
         <div style="text-align: left; margin-bottom: 16px;">
           <div class="form-group">
-            <label>Grupo/s:</label>
-            <input type="text" id="profile-grupo" value="${profile.grupo || ''}" onchange="updateProfileField('grupo', this.value)">
+            <label>Grupo/s (Opcional):</label>
+            <input type="text" id="profile-grupo" value="${profile.grupo || ''}" placeholder="Ej. Grupo A / Mañanas" onchange="updateProfileField('grupo', this.value)">
           </div>
           <div class="form-group">
             <label>Nivel de Juego:</label>
@@ -768,7 +762,12 @@
       const updateData = {};
       updateData[field] = value;
 
-      await _supabase.from('profiles').update(updateData).eq('id', user.id);
+      const { error } = await _supabase.from('profiles').update(updateData).eq('id', user.id);
+      if (error) {
+        alert('Error al actualizar el campo: ' + error.message);
+      } else {
+        loadPlayers(); // Recarga la lista de jugadores para actualizar el grupo visualmente
+      }
     }
 
     // Arranque inicial
