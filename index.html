@@ -434,51 +434,50 @@
     }
 
     async function handleRegister(e) {
-      e.preventDefault();
-      const nombre = document.getElementById('reg-nombre').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const password = document.getElementById('reg-password').value;
-      const mano = document.getElementById('reg-mano').value;
-      const posicion = document.getElementById('reg-posicion').value;
+  e.preventDefault();
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const mano = document.getElementById('reg-mano').value;
+  const posicion = document.getElementById('reg-posicion').value;
 
-      try {
-        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
-        if (authError) throw authError;
+  try {
+    const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
+    if (authError) throw authError;
 
-        if (!authData.user) {
-          alert('Revisa tu correo para confirmar la cuenta.');
-          return;
-        }
-
-        const userId = authData.user.id;
-
-        // Inserción limpia utilizando group_id
-        const { error: profileError } = await _supabase
-          .from('profiles')
-          .insert([{ 
-            id: userId, 
-            nombre: nombre, 
-            email: email, 
-            group_id: '', 
-            nivel: 'Intermedio', 
-            mano: mano, 
-            posicion: posicion, 
-            puntos: 0 
-          }]);
-
-        if (profileError) {
-          await _supabase.auth.signOut();
-          throw new Error("Error guardando el perfil: " + profileError.message);
-        }
-
-        alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
-        switchAuthMode('login');
-
-      } catch (err) {
-        alert('No se pudo completar el registro:\n' + err.message);
-        console.error("Detalle del error:", err);
-      }
+    if (!authData.user) {
+      alert('Revisa tu correo para confirmar la cuenta.');
+      return;
     }
+
+    const userId = authData.user.id;
+
+    // Inserción sin incluir group_id para evitar errores de tipo UUID
+    const { error: profileError } = await _supabase
+      .from('profiles')
+      .insert([{ 
+        id: userId, 
+        nombre: nombre, 
+        email: email, 
+        nivel: 'Intermedio', 
+        mano: mano, 
+        posicion: posicion, 
+        puntos: 0 
+      }]);
+
+    if (profileError) {
+      await _supabase.auth.signOut();
+      throw new Error("Error guardando el perfil: " + profileError.message);
+    }
+
+    alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+    switchAuthMode('login');
+
+  } catch (err) {
+    alert('No se pudo completar el registro:\n' + err.message);
+    console.error("Detalle del error:", err);
+  }
+}
 
     async function handleLogin(e) {
       e.preventDefault();
