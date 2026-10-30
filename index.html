@@ -145,6 +145,13 @@
     }
     .btn:hover { background-color: var(--primary-hover); }
 
+    .btn-secondary {
+      background-color: #f1f3f4;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { background-color: #e8eaed; }
+
     .player-list {
       list-style: none;
       padding: 0;
@@ -336,6 +343,22 @@
         <h2>👥 Jugadores Registrados</h2>
         <div id="players-section" class="loading">Cargando participantes...</div>
       </div>
+      
+      <!-- MÓDULO PARA FORMAR PAREJAS -->
+      <div class="card">
+        <h2>🤝 Formar Nueva Pareja</h2>
+        <form id="couple-form" onsubmit="createCouple(event)">
+          <div class="form-group">
+            <label>Jugador/a 1:</label>
+            <select id="couple-j1" required><option value="">Cargando...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Jugador/a 2:</label>
+            <select id="couple-j2" required><option value="">Cargando...</option></select>
+          </div>
+          <button type="submit" class="btn btn-secondary">➕ Crear Pareja</button>
+        </form>
+      </div>
     </section>
 
     <!-- PESTAÑA 2: AGENDA -->
@@ -350,11 +373,11 @@
         <form id="proposal-form" onsubmit="submitProposal(event)">
           <div class="form-group">
             <label>Pareja 1:</label>
-            <select id="p1-select" required><option value="">Cargando...</option></select>
+            <select id="p1-select" required><option value="">Cargando parejas...</option></select>
           </div>
           <div class="form-group">
             <label>Pareja 2:</label>
-            <select id="p2-select" required><option value="">Cargando...</option></select>
+            <select id="p2-select" required><option value="">Cargando parejas...</option></select>
           </div>
           <div class="form-group">
             <label>Club / Ubicación:</label>
@@ -400,7 +423,7 @@
   <script>
     // 1. CONFIGURACIÓN SUPABASE
     const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Pega tu clave JWT real
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Sustituye con tu clave anon real
     
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -434,50 +457,49 @@
     }
 
     async function handleRegister(e) {
-  e.preventDefault();
-  const nombre = document.getElementById('reg-nombre').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-  const mano = document.getElementById('reg-mano').value;
-  const posicion = document.getElementById('reg-posicion').value;
+      e.preventDefault();
+      const nombre = document.getElementById('reg-nombre').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const mano = document.getElementById('reg-mano').value;
+      const posicion = document.getElementById('reg-posicion').value;
 
-  try {
-    const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
-    if (authError) throw authError;
+      try {
+        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password });
+        if (authError) throw authError;
 
-    if (!authData.user) {
-      alert('Revisa tu correo para confirmar la cuenta.');
-      return;
+        if (!authData.user) {
+          alert('Revisa tu correo para confirmar la cuenta.');
+          return;
+        }
+
+        const userId = authData.user.id;
+
+        const { error: profileError } = await _supabase
+          .from('profiles')
+          .insert([{ 
+            id: userId, 
+            nombre: nombre, 
+            email: email, 
+            nivel: 'Intermedio', 
+            mano: mano, 
+            posicion: posicion, 
+            puntos: 0 
+          }]);
+
+        if (profileError) {
+          await _supabase.auth.signOut();
+          throw new Error("Error guardando el perfil: " + profileError.message);
+        }
+
+        alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+        switchAuthMode('login');
+
+      } catch (err) {
+        alert('No se pudo completar el registro:\n' + err.message);
+        console.error("Detalle del error:", err);
+      }
     }
-
-    const userId = authData.user.id;
-
-    // Inserción sin incluir group_id para evitar errores de tipo UUID
-    const { error: profileError } = await _supabase
-      .from('profiles')
-      .insert([{ 
-        id: userId, 
-        nombre: nombre, 
-        email: email, 
-        nivel: 'Intermedio', 
-        mano: mano, 
-        posicion: posicion, 
-        puntos: 0 
-      }]);
-
-    if (profileError) {
-      await _supabase.auth.signOut();
-      throw new Error("Error guardando el perfil: " + profileError.message);
-    }
-
-    alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
-    switchAuthMode('login');
-
-  } catch (err) {
-    alert('No se pudo completar el registro:\n' + err.message);
-    console.error("Detalle del error:", err);
-  }
-}
 
     async function handleLogin(e) {
       e.preventDefault();
@@ -521,6 +543,7 @@
     // 5. CARGAR DATOS DE LA APP
     async function loadAppData() {
       loadPlayers();
+      loadCouples();
       loadProposals();
       loadResults();
     }
@@ -546,21 +569,86 @@
       });
       html += `</ul>`;
       container.innerHTML = html;
-      populateSelects(data);
+      populatePlayerSelects(data);
     }
 
-    function populateSelects(players) {
-      const p1 = document.getElementById('p1-select');
-      const p2 = document.getElementById('p2-select');
-      if (!p1 || !p2) return;
-      p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
-      p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
+    function populatePlayerSelects(players) {
+      const j1 = document.getElementById('couple-j1');
+      const j2 = document.getElementById('couple-j2');
+      if (!j1 || !j2) return;
+
+      j1.innerHTML = '<option value="">Selecciona Jugador/a 1</option>';
+      j2.innerHTML = '<option value="">Selecciona Jugador/a 2</option>';
+
       players.forEach(p => {
-        p1.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
-        p2.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
+        j1.innerHTML += `<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`;
+        j2.innerHTML += `<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`;
       });
     }
 
+    // 6. CREACIÓN Y CARGA DE PAREJAS (Tabla Parejas)
+    async function createCouple(e) {
+      e.preventDefault();
+      const select1 = document.getElementById('couple-j1');
+      const select2 = document.getElementById('couple-j2');
+
+      const id1 = select1.value;
+      const id2 = select2.value;
+
+      if (!id1 || !id2) {
+        alert('Por favor, selecciona ambos jugadores.');
+        return;
+      }
+
+      if (id1 === id2) {
+        alert('Una pareja no puede estar formada por la misma persona.');
+        return;
+      }
+
+      const nombre1 = select1.options[select1.selectedIndex].getAttribute('data-nombre');
+      const nombre2 = select2.options[select2.selectedIndex].getAttribute('data-nombre');
+      const nombrePareja = `${nombre1} / ${nombre2}`;
+
+      // Insertando en la tabla 'Parejas' con los campos exactos de tu base de datos
+      const { error } = await _supabase.from('Parejas').insert([{
+        jugador1_id: id1,
+        jugador2_id: id2,
+        nombre: nombrePareja,
+        puntos: 0
+      }]);
+
+      if (error) {
+        alert('Error al crear pareja: ' + error.message);
+      } else {
+        alert(`¡Pareja "${nombrePareja}" creada con éxito!`);
+        document.getElementById('couple-form').reset();
+        loadCouples();
+      }
+    }
+
+    async function loadCouples() {
+      const p1 = document.getElementById('p1-select');
+      const p2 = document.getElementById('p2-select');
+      if (!p1 || !p2) return;
+
+      const { data, error } = await _supabase.from('Parejas').select('*');
+
+      if (error || !data || data.length === 0) {
+        p1.innerHTML = '<option value="">Crea primero una pareja...</option>';
+        p2.innerHTML = '<option value="">Crea primero una pareja...</option>';
+        return;
+      }
+
+      p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
+      p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
+
+      data.forEach(c => {
+        p1.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+        p2.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+      });
+    }
+
+    // 7. AGENDA Y RESULTADOS
     async function submitProposal(e) {
       e.preventDefault();
       const p1 = document.getElementById('p1-select').value;
@@ -569,7 +657,7 @@
       const optA = document.getElementById('optA-input').value;
 
       if (p1 === p2) {
-        alert('Las parejas no pueden ser iguales.');
+        alert('Las parejas enfrentadas no pueden ser iguales.');
         return;
       }
 
@@ -703,7 +791,7 @@
       container.innerHTML = html;
     }
 
-    // 6. GESTIÓN DE PERFIL (Actualizando group_id)
+    // 8. GESTIÓN DE PERFIL
     async function renderProfile() {
       const { data: { user } } = await _supabase.auth.getUser();
       if (!user) return;
@@ -720,10 +808,6 @@
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">${profile.email}</p>
         
         <div style="text-align: left; margin-bottom: 16px;">
-          <div class="form-group">
-            <label>Grupo / ID de Grupo:</label>
-            <input type="text" id="profile-grupo" value="${profile.group_id || ''}" placeholder="Ej. Grupo 12" onchange="updateProfileField('group_id', this.value)">
-          </div>
           <div class="form-group">
             <label>Nivel de Juego:</label>
             <select id="profile-nivel" onchange="updateProfileField('nivel', this.value)">
@@ -769,7 +853,6 @@
       }
     }
 
-    // Arranque inicial
     document.addEventListener('DOMContentLoaded', () => {
       checkUserSession();
     });
