@@ -222,8 +222,9 @@
 
     .loading {
       text-align: center;
-      padding: 1.5rem;
+      padding: 1rem;
       color: var(--text-muted);
+      font-size: 0.85rem;
     }
 
     #auth-wrapper {
@@ -337,16 +338,20 @@
   
   <!-- CONTENIDO PRINCIPAL DE LA APP -->
   <main id="main-content" class="hidden">
-    <!-- PESTAÑA 1: PARTICIPANTES -->
+    <!-- PESTAÑA 1: PARTICIPANTES Y PAREJAS -->
     <section id="tab-players" class="tab-content active">
       <div class="card">
         <h2>👥 Jugadores Registrados</h2>
         <div id="players-section" class="loading">Cargando participantes...</div>
       </div>
-      
-      <!-- MÓDULO PARA FORMAR PAREJAS -->
+
       <div class="card">
-        <h2>🤝 Formar Nueva Pareja</h2>
+        <h2>🤝 Parejas Creadas</h2>
+        <div id="couples-list-section" class="loading">Cargando parejas...</div>
+      </div>
+      
+      <div class="card">
+        <h2>➕ Formar Nueva Pareja</h2>
         <form id="couple-form" onsubmit="createCouple(event)">
           <div class="form-group">
             <label>Jugador/a 1:</label>
@@ -423,7 +428,7 @@
   <script>
     // 1. CONFIGURACIÓN SUPABASE
     const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Sustituye con tu clave anon real
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Clave anon real
     
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -609,7 +614,6 @@
       const nombre2 = select2.options[select2.selectedIndex].getAttribute('data-nombre');
       const nombrePareja = `${nombre1} / ${nombre2}`;
 
-      // Insertando en la tabla 'Parejas' con los campos exactos de tu base de datos
       const { error } = await _supabase.from('Parejas').insert([{
         jugador1_id: id1,
         jugador2_id: id2,
@@ -627,25 +631,42 @@
     }
 
     async function loadCouples() {
+      const couplesContainer = document.getElementById('couples-list-section');
       const p1 = document.getElementById('p1-select');
       const p2 = document.getElementById('p2-select');
-      if (!p1 || !p2) return;
 
       const { data, error } = await _supabase.from('Parejas').select('*');
 
       if (error || !data || data.length === 0) {
-        p1.innerHTML = '<option value="">Crea primero una pareja...</option>';
-        p2.innerHTML = '<option value="">Crea primero una pareja...</option>';
+        if(couplesContainer) couplesContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay parejas formadas todavía.</p>';
+        if(p1) p1.innerHTML = '<option value="">Crea primero una pareja...</option>';
+        if(p2) p2.innerHTML = '<option value="">Crea primero una pareja...</option>';
         return;
       }
 
-      p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
-      p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
-
+      // Renderizar la lista visual de parejas en la pestaña Participantes
+      let htmlCouples = `<ul class="player-list">`;
       data.forEach(c => {
-        p1.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
-        p2.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+        htmlCouples += `
+          <li class="player-item">
+            <span><strong>${c.nombre}</strong></span>
+            <span class="badge">${c.puntos || 0} pts</span>
+          </li>
+        `;
       });
+      htmlCouples += `</ul>`;
+      if(couplesContainer) couplesContainer.innerHTML = htmlCouples;
+
+      // Actualizar los selectores de la Agenda
+      if(p1 && p2) {
+        p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
+        p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
+
+        data.forEach(c => {
+          p1.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+          p2.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+        });
+      }
     }
 
     // 7. AGENDA Y RESULTADOS
