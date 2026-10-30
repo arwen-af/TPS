@@ -614,7 +614,7 @@
       const nombre2 = select2.options[select2.selectedIndex].getAttribute('data-nombre');
       const nombrePareja = `${nombre1} / ${nombre2}`;
 
-      const { error } = await _supabase.from('Parejas').insert([{
+      const { error } = await _supabase.from('pairs').insert([{
         jugador1_id: id1,
         jugador2_id: id2,
         nombre: nombrePareja,
@@ -635,7 +635,7 @@
       const p1 = document.getElementById('p1-select');
       const p2 = document.getElementById('p2-select');
 
-      const { data, error } = await _supabase.from('Parejas').select('*');
+      const { data, error } = await _supabase.from('pairs').select('*');
 
       if (error || !data || data.length === 0) {
         if(couplesContainer) couplesContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay parejas formadas todavía.</p>';
