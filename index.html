@@ -643,6 +643,7 @@
       const p1 = document.getElementById('p1-select');
       const p2 = document.getElementById('p2-select');
 
+      // Consultar la tabla 'pairs'
       const { data, error } = await _supabase.from('pairs').select('*');
 
       if (error || !data || data.length === 0) {
@@ -652,7 +653,7 @@
         return;
       }
 
-      // Renderizar la lista visual de parejas en la pestaña Participantes
+      // Renderizar parejas en la pestaña Participantes
       let htmlCouples = `<ul class="player-list">`;
       data.forEach(c => {
         htmlCouples += `
@@ -665,7 +666,7 @@
       htmlCouples += `</ul>`;
       if(couplesContainer) couplesContainer.innerHTML = htmlCouples;
 
-      // Actualizar los selectores de la Agenda
+      // Actualizar selectores en la Agenda
       if(p1 && p2) {
         p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
         p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
@@ -676,7 +677,7 @@
         });
       }
     }
-
+      
     // 7. AGENDA Y RESULTADOS
     async function submitProposal(e) {
       e.preventDefault();
