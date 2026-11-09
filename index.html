@@ -389,14 +389,25 @@
             <input type="text" id="club-input" placeholder="Ej. Padel Club Moraleja" required>
           </div>
           <div class="form-group">
-            <label>Fecha y Hora:</label>
-            <input type="text" id="optA-input" placeholder="Ej. 2026-11-14, 18:00" required>
+            <label>Pista (Opcional):</label>
+            <input type="text" id="pista-input" placeholder="Ej. Pista 3 o Central">
           </div>
-          <button type="submit" class="btn">Enviar Propuesta</button>
+          <div class="form-group">
+            <label>Opción 1 (Fecha y Hora):</label>
+            <input type="text" id="optA-input" placeholder="Ej. 14 Nov, 18:00" required>
+          </div>
+          <div class="form-group">
+            <label>Opción 2 (Opcional):</label>
+            <input type="text" id="optB-input" placeholder="Ej. 15 Nov, 19:00">
+          </div>
+          <div class="form-group">
+            <label>Opción 3 (Opcional):</label>
+            <input type="text" id="optC-input" placeholder="Ej. 16 Nov, 10:00">
+          </div>
+          <button type="submit" class="btn">Guardar Propuesta</button>
         </form>
       </div>
     </section>
-
     <!-- PESTAÑA 3: RESULTADOS -->
     <section id="tab-results" class="tab-content">
       <div class="card">
@@ -684,7 +695,10 @@
       const p1 = document.getElementById('p1-select').value;
       const p2 = document.getElementById('p2-select').value;
       const club = document.getElementById('club-input').value;
+      const pista = document.getElementById('pista-input').value;
       const optA = document.getElementById('optA-input').value;
+      const optB = document.getElementById('optB-input').value;
+      const optC = document.getElementById('optC-input').value;
 
       if (p1 === p2) {
         alert('Las parejas enfrentadas no pueden ser iguales.');
@@ -701,16 +715,37 @@
         loadProposals();
       }
     }
+// Insertar respetando los campos de tu esquema actual
+      const { error } = await _supabase.from('proposals').insert([{ 
+        pareja1_id: p1, // Usando los nombres de pareja actuales en la BD
+        pareja2_id: p2, 
+        club, 
+        pista,
+        opt_a: optA, 
+        opt_b: optB, 
+        opt_c: optC, 
+        confirmada: false 
+      }]);
+
+      if (error) {
+        alert('Error al enviar propuesta: ' + error.message);
+      } else {
+        alert('¡Propuesta guardada con éxito!');
+        document.getElementById('proposal-form').reset();
+        loadProposals();
+      }
+    }
 
     async function loadProposals() {
       const container = document.getElementById('proposals-list');
       const activeContainer = document.getElementById('active-matches-container');
       
-      const { data, error } = await _supabase.from('proposals').select('*');
+      // Ordenar por pareja1 y pareja2 para agrupar visualmente las propuestas del mismo enfrentamiento
+      const { data, error } = await _supabase.from('proposals').select('*').order('pareja1_id', { ascending: true });
 
       if (error || !data || data.length === 0) {
         if(container) container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
-        if(activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles.</p>';
+        if(activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles para resultados.</p>';
         return;
       }
 
@@ -718,18 +753,36 @@
       let htmlActive = '';
 
       data.forEach(p => {
+        const esConfirmado = p.confirmada === true;
+        const badgeColor = esConfirmado ? 'var(--success)' : 'var(--primary)';
+        const estadoTexto = esConfirmado ? 'Confirmado' : 'Propuesta';
+        const pistaInfo = p.pista ? ` | Pista: ${p.pista}` : '';
+
+        // Opciones de horario estructuradas
+        let horariosHtml = `📅 Opción A: ${p.opt_a}`;
+        if (p.opt_b) horariosHtml += `<br>📅 Opción B: ${p.opt_b}`;
+        if (p.opt_c) horariosHtml += `<br>📅 Opción C: ${p.opt_c}`;
+
         htmlAgenda += `
-          <div class="match-card">
-            <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club}</p>
-            <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.p1}</strong> vs <strong>${p.p2}</strong></p>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Fecha: ${p.optA}</p>
+          <div class="match-card" style="border-left-color: ${badgeColor};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club}${pistaInfo}</span>
+              <span class="badge" style="background-color: ${esConfirmado ? '#e6f4ea' : '#e8f0fe'}; color: ${badgeColor};">${estadoTexto}</span>
+            </div>
+            <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.pareja1_id}</strong> vs <strong>${p.pareja2_id}</strong></p>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 8px;">${horariosHtml}</p>
+            
+            <button class="btn ${esConfirmado ? 'btn-secondary' : ''}" style="font-size: 0.8rem; padding: 6px;" onclick="toggleConfirmMatch('${p.id}', ${!esConfirmado})">
+              ${esConfirmado ? '🔄 Cambiar a Pendiente / Propuesta' : '✅ Confirmar Partido y Pista'}
+            </button>
           </div>
         `;
 
+        // Solo listamos en resultados aquellos partidos confirmados (o todos según prefieras)
         htmlActive += `
           <div class="match-card">
             <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
-              📍 ${p.club} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal;">(${p.optA})</span>
+              📍 ${p.club}${pistaInfo} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal;">(${p.opt_a} - <strong>${estadoTexto}</strong>)</span>
             </p>
             <table class="score-table">
               <thead>
@@ -740,7 +793,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td style="text-align:left; font-weight:600;">${p.p1}</td>
+                  <td style="text-align:left; font-weight:600;">${p.pareja1_id}</td>
                   <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${p.id}" placeholder="0"></td>
                   <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${p.id}" placeholder="0"></td>
                   <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${p.id}" placeholder="0"></td>
@@ -748,7 +801,7 @@
                   <td><input type="number" min="0" max="7" class="score-input" id="s5-p1-${p.id}" placeholder="0"></td>
                 </tr>
                 <tr>
-                  <td style="text-align:left; font-weight:600;">${p.p2}</td>
+                  <td style="text-align:left; font-weight:600;">${p.pareja2_id}</td>
                   <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${p.id}" placeholder="0"></td>
                   <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${p.id}" placeholder="0"></td>
                   <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${p.id}" placeholder="0"></td>
@@ -757,7 +810,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult('${p.id}', '${p.p1}', '${p.p2}')">
+            <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult('${p.id}', '${p.pareja1_id}', '${p.pareja2_id}')">
               💾 Guardar y Finalizar Partido
             </button>
           </div>
@@ -766,6 +819,19 @@
 
       if(container) container.innerHTML = htmlAgenda;
       if(activeContainer) activeContainer.innerHTML = htmlActive;
+    }
+
+    async function toggleConfirmMatch(matchId, nuevoEstado) {
+      const { error } = await _supabase
+        .from('proposals')
+        .update({ confirmada: nuevoEstado })
+        .eq('id', matchId);
+
+      if (error) {
+        alert('Error al actualizar el estado: ' + error.message);
+      } else {
+        loadProposals();
+      }
     }
 
     async function saveMatchResult(matchId, p1, p2) {
