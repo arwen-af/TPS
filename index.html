@@ -677,8 +677,9 @@
         p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
 
         data.forEach(c => {
-          p1.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
-          p2.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+          // c.id es el UUID de la pareja en la tabla 'pairs'
+          p1.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+          p2.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
         });
       }
     }
