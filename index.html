@@ -408,6 +408,7 @@
         </form>
       </div>
     </section>
+
     <!-- PESTAÑA 3: RESULTADOS -->
     <section id="tab-results" class="tab-content">
       <div class="card">
@@ -439,7 +440,7 @@
   <script>
     // 1. CONFIGURACIÓN SUPABASE
     const SUPABASE_URL = 'https://nnhtobabfyikdoizltaq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I'; // Clave anon real
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHRvYmFiZnlpa2RvaXpsdGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NDkwNjgsImV4cCI6MjEwODUyNTA2OH0.MlhVdbW1rbnhhmnj_HKpwCaZBCF1kjSjhmpLI_8pY_I';
     
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -573,12 +574,12 @@
         return;
       }
 
+      // Solucionado: eliminada la impresión de group_id / UUID al lado del nombre
       let html = `<ul class="player-list">`;
       data.forEach(p => {
-        const grupoTexto = p.group_id && p.group_id.trim() !== '' ? ` (${p.group_id})` : '';
         html += `
           <li class="player-item">
-            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">${grupoTexto}</span></span>
+            <span><strong>${p.nombre}</strong></span>
             <span class="badge">${p.puntos || 0} pts</span>
           </li>
         `;
@@ -602,7 +603,7 @@
       });
     }
 
-    // 6. CREACIÓN Y CARGA DE PAREJAS (Tabla Parejas)
+    // 6. CREACIÓN Y CARGA DE PAREJAS
     async function createCouple(e) {
       e.preventDefault();
       const select1 = document.getElementById('couple-j1');
@@ -621,13 +622,11 @@
         return;
       }
 
-      // Obtener los nombres de los jugadores seleccionados en el desplegable
       const nombre1 = select1.options[select1.selectedIndex].getAttribute('data-nombre');
       const nombre2 = select2.options[select2.selectedIndex].getAttribute('data-nombre');
       const nombrePareja = `${nombre1} / ${nombre2}`;
 
       try {
-        // Insertar en la tabla 'pairs' (en inglés y minúsculas)
         const { error } = await _supabase.from('pairs').insert([{
           jugador1_id: id1,
           jugador2_id: id2,
@@ -635,13 +634,11 @@
           puntos: 0
         }]);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         alert(`¡Pareja "${nombrePareja}" creada con éxito!`);
         document.getElementById('couple-form').reset();
-        loadCouples(); // Recarga la lista de parejas y actualiza la Agenda
+        loadCouples();
 
       } catch (err) {
         alert('Error al crear la pareja: ' + err.message);
@@ -654,7 +651,6 @@
       const p1 = document.getElementById('p1-select');
       const p2 = document.getElementById('p2-select');
 
-      // Consultar la tabla 'pairs'
       const { data, error } = await _supabase.from('pairs').select('*');
 
       if (error || !data || data.length === 0) {
@@ -664,7 +660,6 @@
         return;
       }
 
-      // Renderizar parejas en la pestaña Participantes
       let htmlCouples = `<ul class="player-list">`;
       data.forEach(c => {
         htmlCouples += `
@@ -677,7 +672,6 @@
       htmlCouples += `</ul>`;
       if(couplesContainer) couplesContainer.innerHTML = htmlCouples;
 
-      // Actualizar selectores en la Agenda
       if(p1 && p2) {
         p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
         p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
@@ -705,19 +699,8 @@
         return;
       }
 
-      const { error } = await _supabase.from('proposals').insert([{ p1, p2, club, optA, estado: 'pendiente' }]);
-
-      if (error) {
-        alert('Error al enviar propuesta: ' + error.message);
-      } else {
-        alert('¡Propuesta enviada con éxito!');
-        document.getElementById('proposal-form').reset();
-        loadProposals();
-      }
-    }
-// Insertar respetando los campos de tu esquema actual
       const { error } = await _supabase.from('proposals').insert([{ 
-        pareja1_id: p1, // Usando los nombres de pareja actuales en la BD
+        pareja1_id: p1, 
         pareja2_id: p2, 
         club, 
         pista,
@@ -740,7 +723,6 @@
       const container = document.getElementById('proposals-list');
       const activeContainer = document.getElementById('active-matches-container');
       
-      // Ordenar por pareja1 y pareja2 para agrupar visualmente las propuestas del mismo enfrentamiento
       const { data, error } = await _supabase.from('proposals').select('*').order('pareja1_id', { ascending: true });
 
       if (error || !data || data.length === 0) {
@@ -758,7 +740,6 @@
         const estadoTexto = esConfirmado ? 'Confirmado' : 'Propuesta';
         const pistaInfo = p.pista ? ` | Pista: ${p.pista}` : '';
 
-        // Opciones de horario estructuradas
         let horariosHtml = `📅 Opción A: ${p.opt_a}`;
         if (p.opt_b) horariosHtml += `<br>📅 Opción B: ${p.opt_b}`;
         if (p.opt_c) horariosHtml += `<br>📅 Opción C: ${p.opt_c}`;
@@ -778,7 +759,6 @@
           </div>
         `;
 
-        // Solo listamos en resultados aquellos partidos confirmados (o todos según prefieras)
         htmlActive += `
           <div class="match-card">
             <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
