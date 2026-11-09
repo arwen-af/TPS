@@ -574,7 +574,6 @@
         return;
       }
 
-      // Limpiado el UUID / grupo para mostrar únicamente el nombre limpio
       let html = `<ul class="player-list">`;
       data.forEach(p => {
         html += `
@@ -677,9 +676,9 @@
         p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
 
         data.forEach(c => {
-          // c.id es el UUID de la pareja en la tabla 'pairs'
-          p1.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
-          p2.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+          // Asignamos el nombre de la pareja para guardarlo directamente en formato texto
+          p1.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+          p2.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
         });
       }
     }
@@ -687,28 +686,24 @@
     // 7. AGENDA Y RESULTADOS
     async function submitProposal(e) {
       e.preventDefault();
-      const select1 = document.getElementById('p1-select');
-      const select2 = document.getElementById('p2-select');
-      
-      const p1Nombre = select1.options[select1.selectedIndex].text;
-      const p2Nombre = select2.options[select2.selectedIndex].text;
-      
+      const p1 = document.getElementById('p1-select').value;
+      const p2 = document.getElementById('p2-select').value;
       const club = document.getElementById('club-input').value;
       const pista = document.getElementById('pista-input').value;
       const optA = document.getElementById('optA-input').value;
       const optB = document.getElementById('optB-input').value;
       const optC = document.getElementById('optC-input').value;
 
-      if (p1Nombre === p2Nombre) {
+      if (p1 === p2) {
         alert('Las parejas enfrentadas no pueden ser iguales.');
         return;
       }
 
       const { error } = await _supabase.from('proposals').insert([{ 
-        pareja1_id: p1Nombre, 
-        pareja2_id: p2Nombre, 
-        club, 
-        pista,
+        pareja1_id: p1, 
+        pareja2_id: p2, 
+        club: club, 
+        pista: pista,
         opt_a: optA, 
         opt_b: optB, 
         opt_c: optC, 
@@ -818,6 +813,7 @@
         loadProposals();
       }
     }
+
     async function saveMatchResult(matchId, p1, p2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
