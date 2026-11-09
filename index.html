@@ -687,22 +687,26 @@
     // 7. AGENDA Y RESULTADOS
     async function submitProposal(e) {
       e.preventDefault();
-      const p1 = document.getElementById('p1-select').value;
-      const p2 = document.getElementById('p2-select').value;
+      const select1 = document.getElementById('p1-select');
+      const select2 = document.getElementById('p2-select');
+      
+      const p1Nombre = select1.options[select1.selectedIndex].text;
+      const p2Nombre = select2.options[select2.selectedIndex].text;
+      
       const club = document.getElementById('club-input').value;
       const pista = document.getElementById('pista-input').value;
       const optA = document.getElementById('optA-input').value;
       const optB = document.getElementById('optB-input').value;
       const optC = document.getElementById('optC-input').value;
 
-      if (p1 === p2) {
+      if (p1Nombre === p2Nombre) {
         alert('Las parejas enfrentadas no pueden ser iguales.');
         return;
       }
 
       const { error } = await _supabase.from('proposals').insert([{ 
-        pareja1_id: p1, 
-        pareja2_id: p2, 
+        pareja1_id: p1Nombre, 
+        pareja2_id: p2Nombre, 
         club, 
         pista,
         opt_a: optA, 
@@ -728,7 +732,7 @@
 
       if (error || !data || data.length === 0) {
         if(container) container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
-        if(activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles para resultados.</p>';
+        if(activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles.</p>';
         return;
       }
 
@@ -752,10 +756,10 @@
               <span class="badge" style="background-color: ${esConfirmado ? '#e6f4ea' : '#e8f0fe'}; color: ${badgeColor};">${estadoTexto}</span>
             </div>
             <p style="font-size:0.9rem; margin:4px 0;"><strong>${p.pareja1_id}</strong> vs <strong>${p.pareja2_id}</strong></p>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 8px;">${horariosHtml}</p>
+            <p style="font-size:0.80rem; color:var(--text-muted); margin-bottom: 8px;">${horariosHtml}</p>
             
             <button class="btn ${esConfirmado ? 'btn-secondary' : ''}" style="font-size: 0.8rem; padding: 6px;" onclick="toggleConfirmMatch('${p.id}', ${!esConfirmado})">
-              ${esConfirmado ? '🔄 Cambiar a Pendiente / Propuesta' : '✅ Confirmar Partido y Pista'}
+              ${esConfirmado ? '🔄 Cambiar a Propuesta' : '✅ Confirmar Partido'}
             </button>
           </div>
         `;
@@ -814,7 +818,6 @@
         loadProposals();
       }
     }
-
     async function saveMatchResult(matchId, p1, p2) {
       let setsArray = [];
       for (let i = 1; i <= 5; i++) {
