@@ -389,22 +389,10 @@
             <input type="text" id="club-input" placeholder="Ej. Padel Club Moraleja" required>
           </div>
           <div class="form-group">
-            <label>Pista (Opcional):</label>
-            <input type="text" id="pista-input" placeholder="Ej. Pista 3 o Central">
+            <label>Fecha y Hora:</label>
+            <input type="text" id="optA-input" placeholder="Ej. 2026-11-14, 18:00" required>
           </div>
-          <div class="form-group">
-            <label>Opción 1 (Fecha y Hora):</label>
-            <input type="text" id="optA-input" placeholder="Ej. 14 Nov, 18:00" required>
-          </div>
-          <div class="form-group">
-            <label>Opción 2 (Opcional):</label>
-            <input type="text" id="optB-input" placeholder="Ej. 15 Nov, 19:00">
-          </div>
-          <div class="form-group">
-            <label>Opción 3 (Opcional):</label>
-            <input type="text" id="optC-input" placeholder="Ej. 16 Nov, 10:00">
-          </div>
-          <button type="submit" class="btn">Guardar Propuesta</button>
+          <button type="submit" class="btn">Enviar Propuesta</button>
         </form>
       </div>
     </section>
@@ -444,6 +432,9 @@
     
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Caché local para resolver UUID de pareja -> nombre legible sin romper atributos HTML
+    let couplesById = {};
 
     // 2. CONTROL DE PESTAÑAS
     function switchTab(tabId, btnElement) {
@@ -560,7 +551,7 @@
     // 5. CARGAR DATOS DE LA APP
     async function loadAppData() {
       loadPlayers();
-      loadCouples();
+      await loadCouples();
       loadProposals();
       loadResults();
     }
@@ -576,9 +567,10 @@
 
       let html = `<ul class="player-list">`;
       data.forEach(p => {
+        const grupoTexto = p.group_id && p.group_id.trim() !== '' ? ` (${p.group_id})` : '';
         html += `
           <li class="player-item">
-            <span><strong>${p.nombre}</strong></span>
+            <span><strong>${p.nombre}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">${grupoTexto}</span></span>
             <span class="badge">${p.puntos || 0} pts</span>
           </li>
         `;
@@ -637,7 +629,8 @@
 
         alert(`¡Pareja "${nombrePareja}" creada con éxito!`);
         document.getElementById('couple-form').reset();
-        loadCouples();
+        await loadCouples();
+        loadProposals();
 
       } catch (err) {
         alert('Error al crear la pareja: ' + err.message);
@@ -652,10 +645,17 @@
 
       const { data, error } = await _supabase.from('pairs').select('*');
 
+      couplesById = {};
+      if (Array.isArray(data)) {
+        data.forEach(c => {
+          couplesById[c.id] = c.nombre;
+        });
+      }
+
       if (error || !data || data.length === 0) {
-        if(couplesContainer) couplesContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay parejas formadas todavía.</p>';
-        if(p1) p1.innerHTML = '<option value="">Crea primero una pareja...</option>';
-        if(p2) p2.innerHTML = '<option value="">Crea primero una pareja...</option>';
+        if (couplesContainer) couplesContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay parejas formadas todavía.</p>';
+        if (p1) p1.innerHTML = '<option value="">Crea primero una pareja...</option>';
+        if (p2) p2.innerHTML = '<option value="">Crea primero una pareja...</option>';
         return;
       }
 
@@ -669,145 +669,135 @@
         `;
       });
       htmlCouples += `</ul>`;
-      if(couplesContainer) couplesContainer.innerHTML = htmlCouples;
+      if (couplesContainer) couplesContainer.innerHTML = htmlCouples;
 
-      if(p1 && p2) {
+      if (p1 && p2) {
         p1.innerHTML = '<option value="">Selecciona Pareja 1</option>';
         p2.innerHTML = '<option value="">Selecciona Pareja 2</option>';
 
         data.forEach(c => {
-          // Asignamos el nombre de la pareja para guardarlo directamente en formato texto
-          p1.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
-          p2.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`;
+          p1.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+          p2.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
         });
       }
     }
-      
+
     // 7. AGENDA Y RESULTADOS
     async function submitProposal(e) {
-     e.preventDefault();
-  const pareja1_id = document.getElementById('p1-select').value;
-  const pareja2_id = document.getElementById('p2-select').value;
-  const club = document.getElementById('club-input').value.trim();
-  const opt_a = document.getElementById('optA-input').value.trim();
+      e.preventDefault();
+      const pareja1_id = document.getElementById('p1-select').value;
+      const pareja2_id = document.getElementById('p2-select').value;
+      const club = document.getElementById('club-input').value.trim();
+      const opt_a = document.getElementById('optA-input').value.trim();
 
-  if (!pareja1_id || !pareja2_id) {
-    alert('Selecciona ambas parejas.');
-    return;
-  }
+      if (!pareja1_id || !pareja2_id) {
+        alert('Selecciona ambas parejas.');
+        return;
+      }
 
-  if (pareja1_id === pareja2_id) {
-    alert('Las parejas enfrentadas no pueden ser iguales.');
-    return;
-  }
+      if (pareja1_id === pareja2_id) {
+        alert('Las parejas enfrentadas no pueden ser iguales.');
+        return;
+      }
 
-  const { error } = await _supabase
-    .from('proposals')
-    .insert([{
-      pareja1_id,
-      pareja2_id,
-      club,
-      opt_a,
-      confirmada: false
-    }]);
+      const { error } = await _supabase
+        .from('proposals')
+        .insert([{
+          pareja1_id,
+          pareja2_id,
+          club,
+          opt_a,
+          confirmada: false
+        }]);
 
-  if (error) {
-    alert('Error al enviar propuesta: ' + error.message);
-  } else {
-    alert('¡Propuesta enviada con éxito!');
-    document.getElementById('proposal-form').reset();
-    loadProposals();
-  }
-}
+      if (error) {
+        alert('Error al enviar propuesta: ' + error.message);
+      } else {
+        alert('¡Propuesta enviada con éxito!');
+        document.getElementById('proposal-form').reset();
+        loadProposals();
+      }
+    }
 
     async function loadProposals() {
       const container = document.getElementById('proposals-list');
-  const activeContainer = document.getElementById('active-matches-container');
+      const activeContainer = document.getElementById('active-matches-container');
 
-  const [{ data: pairsData }, { data, error }] = await Promise.all([
-    _supabase.from('pairs').select('id, nombre'),
-    _supabase.from('proposals').select('*')
-  ]);
+      const { data, error } = await _supabase.from('proposals').select('*');
 
-  const pairsMap = {};
-  (pairsData || []).forEach(pair => {
-    pairsMap[pair.id] = pair.nombre;
-  });
-
-  if (error || !data || data.length === 0) {
-    if (container) container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
-    if (activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles.</p>';
-    return;
-  }
-
-  let htmlAgenda = '';
-  let htmlActive = '';
-
-  data.forEach(p => {
-    const nombreP1 = pairsMap[p.pareja1_id] || p.pareja1_id;
-    const nombreP2 = pairsMap[p.pareja2_id] || p.pareja2_id;
-    const fechaHora = p.opt_a || p.optA || '';
-
-    htmlAgenda += `
-      <div class="match-card">
-        <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club}</p>
-        <p style="font-size:0.9rem; margin:4px 0;"><strong>${nombreP1}</strong> vs <strong>${nombreP2}</strong></p>
-        <p style="font-size:0.8rem; color:var(--text-muted);">Fecha: ${fechaHora}</p>
-      </div>
-    `;
-
-    htmlActive += `
-      <div class="match-card">
-        <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
-          📍 ${p.club} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal;">(${fechaHora})</span>
-        </p>
-        <table class="score-table">
-          <thead>
-            <tr>
-              <th style="text-align:left;">Parejas</th>
-              <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="text-align:left; font-weight:600;">${nombreP1}</td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s4-p1-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s5-p1-${p.id}" placeholder="0"></td>
-            </tr>
-            <tr>
-              <td style="text-align:left; font-weight:600;">${nombreP2}</td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s4-p2-${p.id}" placeholder="0"></td>
-              <td><input type="number" min="0" max="7" class="score-input" id="s5-p2-${p.id}" placeholder="0"></td>
-            </tr>
-          </tbody>
-        </table>
-        <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResult('${p.id}', '${nombreP1}', '${nombreP2}')">
-          💾 Guardar y Finalizar Partido
-        </button>
-      </div>
-    `;
-  });
-
-  if (container) container.innerHTML = htmlAgenda;
-  if (activeContainer) activeContainer.innerHTML = htmlActive;
-}
-    async function toggleConfirmMatch(matchId, nuevoEstado) {
-      const { error } = await _supabase
-        .from('proposals')
-        .update({ confirmada: nuevoEstado })
-        .eq('id', matchId);
-
-      if (error) {
-        alert('Error al actualizar el estado: ' + error.message);
-      } else {
-        loadProposals();
+      if (error || !data || data.length === 0) {
+        if (container) container.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos programados.</p>';
+        if (activeContainer) activeContainer.innerHTML = '<p style="color: var(--text-muted); font-size:0.85rem;">No hay partidos disponibles.</p>';
+        return;
       }
+
+      let htmlAgenda = '';
+      let htmlActive = '';
+
+      data.forEach(p => {
+        const nombreP1 = couplesById[p.pareja1_id] || p.pareja1_id;
+        const nombreP2 = couplesById[p.pareja2_id] || p.pareja2_id;
+        const fechaHora = p.opt_a || p.optA || '';
+
+        htmlAgenda += `
+          <div class="match-card">
+            <p style="font-weight:600; color:var(--primary); font-size:0.85rem;">📍 ${p.club}</p>
+            <p style="font-size:0.9rem; margin:4px 0;"><strong>${nombreP1}</strong> vs <strong>${nombreP2}</strong></p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Fecha: ${fechaHora}</p>
+          </div>
+        `;
+
+        htmlActive += `
+          <div class="match-card" data-match-id="${p.id}" data-p1-id="${p.pareja1_id}" data-p2-id="${p.pareja2_id}">
+            <p style="font-weight:600; color:var(--primary); font-size:0.85rem; margin-bottom:6px;">
+              📍 ${p.club} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal;">(${fechaHora})</span>
+            </p>
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Parejas</th>
+                  <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="text-align:left; font-weight:600;">${nombreP1}</td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s1-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s2-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s3-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s4-p1-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s5-p1-${p.id}" placeholder="0"></td>
+                </tr>
+                <tr>
+                  <td style="text-align:left; font-weight:600;">${nombreP2}</td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s1-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s2-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s3-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s4-p2-${p.id}" placeholder="0"></td>
+                  <td><input type="number" min="0" max="7" class="score-input" id="s5-p2-${p.id}" placeholder="0"></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn" style="margin-top: 8px; font-size: 0.85rem; padding: 8px;" onclick="saveMatchResultFromCard(this)">
+              💾 Guardar y Finalizar Partido
+            </button>
+          </div>
+        `;
+      });
+
+      if (container) container.innerHTML = htmlAgenda;
+      if (activeContainer) activeContainer.innerHTML = htmlActive;
+    }
+
+    function saveMatchResultFromCard(btnElement) {
+      const card = btnElement.closest('.match-card');
+      if (!card) return;
+      const matchId = card.getAttribute('data-match-id');
+      const p1Id = card.getAttribute('data-p1-id');
+      const p2Id = card.getAttribute('data-p2-id');
+      const p1Nombre = couplesById[p1Id] || p1Id;
+      const p2Nombre = couplesById[p2Id] || p2Id;
+      saveMatchResult(matchId, p1Nombre, p2Nombre);
     }
 
     async function saveMatchResult(matchId, p1, p2) {
